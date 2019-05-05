@@ -1,7 +1,8 @@
 #pragma once
+#include <fcntl.h>
+#include "pthread.h"
 #include "semaphore.h"
 #include "types.h"
-#include "pthread.h"
 
 #define MAX_DATA        200
 
