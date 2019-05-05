@@ -6,18 +6,15 @@
 #include <unistd.h>
 #include "constants.h"
 #include "types.h"
-#include "semaphore.h"
+#include "cli.h"
 
-int main() {
-  int fd  = open(SERVER_FIFO_PATH, O_RDWR);  
-  tlv_request_t request;
-  request.type = OP_CREATE_ACCOUNT;
-  request.length = sizeof(request.value);
-  sem_t *server = sem_open(SERVER_SEMAPHORE, 0);
-  if(server == NULL){
-    printf("Failed to open server!\n");
-    exit(1);
+int main(int argc , char * argv[]) {
+  if(argc != 6){
+    printf("Usage: user num_acc password delay_ms operation arguments");
   }
+  tlv_request_t request;
+  user_cli(&request, argv);
+  int fd  = open(SERVER_FIFO_PATH, O_RDWR);  
   // int value;
   // sem_getvalue(server, &value);
   // printf("Value %d\n", value);
