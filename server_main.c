@@ -8,12 +8,13 @@
 #include "semaphore.h"
 #include "sync.h"
 #include "types.h"
+#include "producer.h"
 
 int main() {
 
   int fd1;
   mkfifo(SERVER_FIFO_PATH, 0660);
-  // initialize_sync(MAX_BANK_OFFICES);
+  initialize_sync(3);
   // unlink(SERVER_SEMAPHORE);
 
   while (1) {
@@ -37,6 +38,7 @@ int main() {
     }
 
     printf("Received message type %d, with the length %u\n", request->type, request->length);
+    produce_data(request);
     close(fd1);
   }
 
