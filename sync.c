@@ -16,15 +16,17 @@ void initialize_sync(int max_threads) {
 }
 
 tlv_request_t *retrieve_data() {
+  tlv_request_t * saving_data = NULL;
   for (int i = 0; i < MAX_DATA; i++) {
     pthread_mutex_lock(&data_mut);
     if (data[i] != NULL) {
-      pthread_mutex_unlock(&data_mut);
-      return data[i];
+      saving_data = data[i];
+      data[i] = NULL;
+      break;
     }
   }
   pthread_mutex_unlock(&data_mut);
-  return NULL;
+  return saving_data;
 }
 
 void push_data(tlv_request_t *pushing_data){
