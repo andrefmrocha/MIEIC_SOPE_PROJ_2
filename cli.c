@@ -24,7 +24,7 @@ void user_cli(tlv_request_t *request, char *argv[]) {
   }
   else if (operation_type == OP_TRANSFER) {
     char *parsed_info[MAX_ARGUMENTS];
-    if (parse_string(argv[5], parsed_info) != 3){
+    if (parse_string(argv[5], parsed_info) != 3) {
       printf("Wrong number of arguments to make a transfer!\n");
       exit(1);
     }
@@ -33,7 +33,6 @@ void user_cli(tlv_request_t *request, char *argv[]) {
     request->value.transfer.amount = atoi(parsed_info[1]);
 
     printf("Transfering %d to account %d\n", request->value.transfer.amount, request->value.transfer.account_id);
-
   }
 
   request->length = sizeof(request->value);

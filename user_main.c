@@ -4,17 +4,17 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "cli.h"
 #include "constants.h"
 #include "types.h"
-#include "cli.h"
 
-int main(int argc , char * argv[]) {
-  if(argc != 6){
+int main(int argc, char *argv[]) {
+  if (argc != 6) {
     printf("Usage: user num_acc password delay_ms operation arguments");
   }
   tlv_request_t request;
   user_cli(&request, argv);
-  int fd  = open(SERVER_FIFO_PATH, O_RDWR);  
+  int fd = open(SERVER_FIFO_PATH, O_RDWR);
   // int value;
   // sem_getvalue(server, &value);
   // printf("Value %d\n", value);

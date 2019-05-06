@@ -5,10 +5,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "constants.h"
+#include "producer.h"
 #include "semaphore.h"
 #include "sync.h"
 #include "types.h"
-#include "producer.h"
 
 int main() {
 
@@ -37,7 +37,6 @@ int main() {
       continue;
     }
 
-    printf("Received message type %d, with the length %u\n", request->type, request->length);
     produce_data(request);
     close(fd1);
   }

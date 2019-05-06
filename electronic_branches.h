@@ -1,6 +1,6 @@
 #pragma once
-#include "sync.h"
-#include "semaphore.h"
 #include <stdio.h>
+#include "semaphore.h"
+#include "sync.h"
 
-void *  consumer(void * args);
+void *consumer(void *args);
