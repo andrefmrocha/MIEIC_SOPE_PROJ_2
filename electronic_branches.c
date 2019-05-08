@@ -61,18 +61,28 @@ void process_data(tlv_request_t *value) {
 }
 
 void create_account(tlv_request_t *value) {
+  ret_code_t *code = NULL;
   if (value->value.header.account_id != ADMIN_ACCOUNT_ID) {
-    // TODO:  send OP_NOT_ALLOW
+    code = RC_OP_NALLOW;
+  }else{
+
+    pthread_mutex_lock(&mutex);
+    if (accounts[value->value.create.account_id] != NULL) {
+      code = RC_ID_IN_USE;
+    }else{
+      char salt[SALT_LEN];
+      char hash[HASH_LEN];
+      generate_salt(salt);
+      generate_hash(salt, value->value.create.password, hash);
+      printf("Hash: %s\n", hash);
+      accounts[value->value.create.account_id]->account_id = value->value.create.account_id;
+      accounts[value->value.create.account_id]->balance = value->value.create.balance;
+      strcpy(accounts[value->value.create.account_id]->hash, hash);
+      strcpy(accounts[value->value.create.account_id]->salt, salt);
+      code = RC_OK;
+    }
+    pthread_mutex_unlock(&mutex);
+
   }
 
-  pthread_mutex_lock(&mutex);
-  if (accounts[value->value.create.account_id] != NULL) {
-    //TODO: send ID_IN_USE
-  }
-
-  char salt[SALT_LEN];
-  char hash[HASH_LEN];
-  generate_salt(salt);
-  generate_hash(salt, value->value.create.password, hash);
-  printf("Hash: %s\n", hash);
 }
