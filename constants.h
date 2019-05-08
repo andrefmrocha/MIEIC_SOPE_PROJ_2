@@ -36,3 +36,12 @@
 
 #define SPACE_STR " "
 #define MAX_ARGUMENTS 20
+
+// User CLI Constants
+#define ACCOUNT_ID 1
+#define OP_DELAY 3
+#define PASSWORD 2
+#define ARGS 5
+#define CRT_ACCOUNT_ID 0
+#define CRT_ACCOUNT_BL 1
+#define CRT_ACCOUNT_PW 2
