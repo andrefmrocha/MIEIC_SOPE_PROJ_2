@@ -45,3 +45,5 @@
 #define CRT_ACCOUNT_ID 0
 #define CRT_ACCOUNT_BL 1
 #define CRT_ACCOUNT_PW 2
+#define TRNF_ACC_ID    0
+#define TRNF_ACC_AMNT  1

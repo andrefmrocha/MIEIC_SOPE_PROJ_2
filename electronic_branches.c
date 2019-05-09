@@ -12,6 +12,8 @@ void answer_user(pid_t pid, tlv_reply_t *reply);
 
 void check_balance(tlv_request_t *value);
 
+void transfer(tlv_request_t *value);
+
 int login_user(req_header_t *account);
 
 void *consumer(void *args) {
@@ -162,5 +164,39 @@ void check_balance(tlv_request_t *value) {
   }
   pthread_mutex_unlock(&mutex);
   reply.value.header.ret_code = code;
+  answer_user(value->value.header.pid, &reply);
+}
+
+void transfer(tlv_request_t *value) {
+  ret_code_t code = RC_OTHER;
+  tlv_reply_t reply;
+  reply.type = value->type;
+  reply.value.header.account_id = value->value.header.account_id;
+  pthread_mutex_lock(&mutex);
+  reply.value.transfer.balance = accounts[value->value.header.account_id]->balance;
+  if (value->value.header.account_id == ADMIN_ACCOUNT_ID) {
+    code = RC_OP_NALLOW;
+  }
+  else if (accounts[value->value.header.account_id] == NULL || accounts[value->value.transfer.account_id] == NULL) {
+    code = RC_ID_NOT_FOUND;
+  }
+  else if (value->value.header.account_id == value->value.transfer.account_id) {
+    code = RC_SAME_ID;
+  }
+  else if (( (int)(accounts[value->value.header.account_id]->balance - value->value.transfer.amount)) < 0) {
+    code = RC_NO_FUNDS;
+  }
+  else if (accounts[value->value.transfer.account_id]->balance + value->value.transfer.amount > MAX_BALANCE) {
+    code = RC_TOO_HIGH;
+  }
+  else {
+    accounts[value->value.header.account_id]->balance -= value->value.transfer.amount;
+    accounts[value->value.transfer.account_id]->balance += value->value.transfer.amount;
+    code = RC_OK;
+    reply.value.transfer.balance = accounts[value->value.header.account_id]->balance;
+  }
+  reply.value.header.ret_code = code;
+  reply.length = sizeof(reply.value);
+
   answer_user(value->value.header.pid, &reply);
 }

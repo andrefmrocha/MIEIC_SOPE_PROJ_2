@@ -27,10 +27,26 @@ void user_cli(tlv_request_t *request, char *argv[]) {
     request->value.create.account_id = atoi(parsed_info[CRT_ACCOUNT_ID]);
     request->value.create.balance = atoi(parsed_info[CRT_ACCOUNT_BL]);
     strcpy(request->value.create.password, parsed_info[CRT_ACCOUNT_PW]);
-    printf("Creating account with id %d, balance %d, and password %s\n",
-           request->value.create.account_id,
-           request->value.create.balance,
-           request->value.create.password);
+
+    if (request->value.create.account_id < 1 || request->value.create.account_id >= MAX_BANK_ACCOUNTS){
+      printf("Invalid Account ID!\n");
+      exit(1);
+    }
+
+    if (request->value.create.balance < MIN_BALANCE || request->value.create.balance > MAX_BALANCE){
+      printf("Invalid Balance!\n");
+      exit(1);
+    }
+
+    if (strlen(request->value.create.password) < MIN_PASSWORD_LEN || strlen(request->value.create.password) > MAX_PASSWORD_LEN){
+      printf("Invalid password length!\n");
+      exit(1);
+    }
+
+      printf("Creating account with id %d, balance %d, and password %s\n",
+             request->value.create.account_id,
+             request->value.create.balance,
+             request->value.create.password);
   }
   else if (operation_type == OP_TRANSFER) {
     char *parsed_info[MAX_ARGUMENTS];
@@ -39,8 +55,27 @@ void user_cli(tlv_request_t *request, char *argv[]) {
       exit(1);
     }
 
-    request->value.transfer.account_id = atoi(parsed_info[0]);
-    request->value.transfer.amount = atoi(parsed_info[1]);
+    if(strlen(parsed_info[TRNF_ACC_ID]) > WIDTH_ACCOUNT){
+      printf("Invalid account size\n");
+      exit(1);
+    }
+
+    if(strlen(parsed_info[TRNF_ACC_AMNT]) > WIDTH_BALANCE){
+      printf("Invalid balance size\n");
+      exit(1);
+    }
+
+    request->value.transfer.account_id = atoi(parsed_info[TRNF_ACC_ID]);
+    request->value.transfer.amount = atoi(parsed_info[TRNF_ACC_AMNT]);
+
+    if(request->value.transfer.account_id < 1 || request->value.transfer.account_id >= MAX_BANK_ACCOUNTS){
+      printf("Invalid account ID\n");
+    }
+
+    if(request->value.transfer.amount < 1 || request->value.transfer.amount >= MAX_BALANCE){
+      printf("Invalid balance amount \n");
+      exit(1);
+    }
 
     printf("Transfering %d to account %d\n", request->value.transfer.amount, request->value.transfer.account_id);
   }
