@@ -8,11 +8,11 @@ void process_data(tlv_request_t *value);
 
 void create_account(tlv_request_t *value);
 
-void answer_user(pid_t pid, tlv_reply_t * reply);
+void answer_user(pid_t pid, tlv_reply_t *reply);
 
-void check_balance(tlv_request_t * value);
+void check_balance(tlv_request_t *value);
 
-int login_user(req_header_t* account);
+int login_user(req_header_t *account);
 
 void *consumer(void *args) {
   //   int id = *(int *) args;
@@ -36,7 +36,7 @@ void *consumer(void *args) {
 }
 
 void process_data(tlv_request_t *value) {
-  if(login_user(&value->value.header) == 0){
+  if (login_user(&value->value.header) == 0) {
     switch (value->type) {
       case OP_CREATE_ACCOUNT:
         printf("Create account!\n");
@@ -65,7 +65,8 @@ void process_data(tlv_request_t *value) {
         sleep(3);
         break;
     }
-  }else{
+  }
+  else {
     tlv_reply_t reply;
     reply.type = value->type;
     reply.value.header.account_id = value->value.header.account_id;
@@ -74,7 +75,6 @@ void process_data(tlv_request_t *value) {
     printf("Return code: %d\n", RC_LOGIN_FAIL);
     answer_user(value->value.header.pid, &reply);
   }
-  
 }
 
 void create_account(tlv_request_t *value) {
@@ -103,7 +103,7 @@ void create_account(tlv_request_t *value) {
   answer_user(value->value.header.pid, &reply);
 }
 
-void answer_user(pid_t user_pid, tlv_reply_t * reply) {
+void answer_user(pid_t user_pid, tlv_reply_t *reply) {
   char answer_fifo[USER_FIFO_PATH_LEN];
   char pid[WIDTH_ID + 1];
   sprintf(pid, "%u", user_pid);
@@ -129,31 +129,32 @@ void save_account(req_create_account_t *account_info) {
   strcpy(accounts[account_info->account_id]->salt, salt);
 }
 
-int login_user(req_header_t *account){
+int login_user(req_header_t *account) {
   pthread_mutex_lock(&mutex);
   char hash[HASH_LEN];
   generate_hash(accounts[account->account_id]->salt, account->password, hash);
-  if(strcmp(hash, accounts[account->account_id]->hash) != 0){
+  if (strcmp(hash, accounts[account->account_id]->hash) != 0) {
     pthread_mutex_unlock(&mutex);
     return -1;
   }
-  else
-  {
+  else {
     pthread_mutex_unlock(&mutex);
     return 0;
   }
 }
 
-void check_balance(tlv_request_t *value){
+void check_balance(tlv_request_t *value) {
   ret_code_t code = RC_OTHER;
   tlv_reply_t reply;
   reply.type = value->type;
   pthread_mutex_lock(&mutex);
-  if(accounts[value->value.header.account_id] == NULL){
+  if (accounts[value->value.header.account_id] == NULL) {
     code = RC_ID_NOT_FOUND;
-  }else if (value->value.header.account_id == ADMIN_ACCOUNT_ID){
+  }
+  else if (value->value.header.account_id == ADMIN_ACCOUNT_ID) {
     code = RC_OP_NALLOW;
-  }else{
+  }
+  else {
     code = RC_OK;
     reply.value.header.account_id = value->value.header.account_id;
     reply.value.balance.balance = accounts[value->value.header.account_id]->balance;

@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
   read(fd_answer, &reply.length, sizeof(reply.length));
   read(fd_answer, &reply.value, reply.length);
   printf("Received answer code %d, from account id %d\n", reply.value.header.ret_code, reply.value.header.account_id);
-  if(reply.type == OP_BALANCE){
+  if (reply.type == OP_BALANCE) {
     printf("Current balance: %u\n", reply.value.balance.balance);
   }
   return 0;
