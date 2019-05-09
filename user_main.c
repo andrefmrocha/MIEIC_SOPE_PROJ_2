@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
   if (reply.type == OP_BALANCE) {
     printf("Current balance: %u\n", reply.value.balance.balance);
   }
-  if(reply.type == OP_TRANSFER){
+  if (reply.type == OP_TRANSFER) {
     printf("Current balance: %u\n", reply.value.transfer.balance);
   }
   return 0;

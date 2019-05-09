@@ -184,7 +184,7 @@ void transfer(tlv_request_t *value) {
   else if (value->value.header.account_id == value->value.transfer.account_id) {
     code = RC_SAME_ID;
   }
-  else if (( (int)(accounts[value->value.header.account_id]->balance - value->value.transfer.amount)) < 0) {
+  else if (((int) (accounts[value->value.header.account_id]->balance - value->value.transfer.amount)) < 0) {
     code = RC_NO_FUNDS;
   }
   else if (accounts[value->value.transfer.account_id]->balance + value->value.transfer.amount > MAX_BALANCE) {

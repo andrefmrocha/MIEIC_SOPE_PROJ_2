@@ -4,15 +4,15 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "cli.h"
 #include "constants.h"
 #include "producer.h"
 #include "semaphore.h"
 #include "types.h"
-#include "cli.h"
 
-int main(int argc, char * argv[]) {
+int main(int argc, char *argv[]) {
 
-  if(argc != 3){
+  if (argc != 3) {
     printf("Usage: server num_offices password");
     exit(1);
   }
