@@ -14,18 +14,21 @@ int main(int argc, char *argv[]) {
   }
   tlv_request_t request;
   user_cli(&request, argv);
-  int fd = open(SERVER_FIFO_PATH, O_RDWR);
-  // int value;
-  // sem_getvalue(server, &value);
-  // printf("Value %d\n", value);
-  write(fd, &request.type, sizeof(op_type_t));
-  // sem_post(server);
-  // sem_wait(server);
-  write(fd, &request.length, sizeof(request.length));
-  // sem_post(server);
-  // sem_wait(server);
-  write(fd, &request.value, sizeof(request.value));
-  // sem_post(server);
-  close(fd);
+  int fd_server = open(SERVER_FIFO_PATH, O_RDWR);
+  write(fd_server, &request.type, sizeof(op_type_t));
+  write(fd_server, &request.length, sizeof(request.length));
+  write(fd_server, &request.value, sizeof(request.value));
+  close(fd_server);
+  char answer_fifo[USER_FIFO_PATH_LEN];
+  char pid[WIDTH_ID + 1];
+  sprintf(pid, "%u", getpid());
+  strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
+  strcat(answer_fifo, pid);
+  int fd_answer = open(answer_fifo, O_CREAT | O_RDONLY, 0600);
+  tlv_reply_t reply;
+  read(fd_answer, &reply.type, sizeof(reply.type));
+  read(fd_answer, &reply.length, sizeof(reply.length));
+  read(fd_answer, &reply.value, reply.length);
+  printf("Received answer code %d", reply.value.header.ret_code);
   return 0;
 }

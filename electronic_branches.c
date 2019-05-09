@@ -8,6 +8,8 @@ void process_data(tlv_request_t *value);
 
 void create_account(tlv_request_t *value);
 
+void answer_user(ret_code_t code, tlv_request_t * value);
+
 void *consumer(void *args) {
   //   int id = *(int *) args;
   tlv_request_t *value;
@@ -61,7 +63,7 @@ void process_data(tlv_request_t *value) {
 }
 
 void create_account(tlv_request_t *value) {
-  ret_code_t *code = NULL;
+  ret_code_t code = RC_OTHER;
   if (value->value.header.account_id != ADMIN_ACCOUNT_ID) {
     code = RC_OP_NALLOW;
   }else{
@@ -75,14 +77,34 @@ void create_account(tlv_request_t *value) {
       generate_salt(salt);
       generate_hash(salt, value->value.create.password, hash);
       printf("Hash: %s\n", hash);
+      accounts[value->value.create.account_id] = malloc(sizeof(bank_account_t));
       accounts[value->value.create.account_id]->account_id = value->value.create.account_id;
       accounts[value->value.create.account_id]->balance = value->value.create.balance;
       strcpy(accounts[value->value.create.account_id]->hash, hash);
       strcpy(accounts[value->value.create.account_id]->salt, salt);
       code = RC_OK;
+      // printf("Creating account with id %d, balance %d, and password %s\n", value->value.create.account_id, value->value.create.balance, value->value.create.password);
     }
     pthread_mutex_unlock(&mutex);
-
   }
+  answer_user(code, value);
 
+}
+
+void answer_user(ret_code_t code, tlv_request_t * value){
+  printf("Return code: %d\n", code);
+  char answer_fifo[USER_FIFO_PATH_LEN];
+  char pid[WIDTH_ID + 1];
+  sprintf(pid, "%u", value->value.header.pid);
+  strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
+  strcat(answer_fifo, pid);
+  int fd = open(answer_fifo, O_WRONLY);
+  tlv_reply_t reply;
+  reply.type = value->type;
+  reply.value.header.account_id = value->value.header.account_id;
+  reply.value.header.ret_code = code;
+  reply.length = sizeof(reply.value);
+  write(fd,&reply.type, sizeof(reply.type));
+  write(fd,&reply.length, sizeof(reply.length));
+  write(fd,&reply.value, reply.length);
 }
