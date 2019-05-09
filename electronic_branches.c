@@ -10,6 +10,8 @@ void create_account(tlv_request_t *value);
 
 void answer_user(pid_t pid, tlv_reply_t * reply);
 
+void check_balance(tlv_request_t * value);
+
 int login_user(req_header_t* account);
 
 void *consumer(void *args) {
@@ -37,7 +39,6 @@ void process_data(tlv_request_t *value) {
   if(login_user(&value->value.header) == 0){
     switch (value->type) {
       case OP_CREATE_ACCOUNT:
-        /* code */
         printf("Create account!\n");
         create_account(value);
         sleep(3);
@@ -45,6 +46,7 @@ void process_data(tlv_request_t *value) {
 
       case OP_BALANCE:
         printf("Get account's balance\n");
+        check_balance(value);
         sleep(3);
         break;
 
@@ -140,4 +142,24 @@ int login_user(req_header_t *account){
     pthread_mutex_unlock(&mutex);
     return 0;
   }
+}
+
+void check_balance(tlv_request_t *value){
+  ret_code_t code = RC_OTHER;
+  tlv_reply_t reply;
+  reply.type = value->type;
+  pthread_mutex_lock(&mutex);
+  if(accounts[value->value.header.account_id] == NULL){
+    code = RC_ID_NOT_FOUND;
+  }else if (value->value.header.account_id == ADMIN_ACCOUNT_ID){
+    code = RC_OP_NALLOW;
+  }else{
+    code = RC_OK;
+    reply.value.header.account_id = value->value.header.account_id;
+    reply.value.balance.balance = accounts[value->value.header.account_id]->balance;
+    reply.length = sizeof(reply.value);
+  }
+  pthread_mutex_unlock(&mutex);
+  reply.value.header.ret_code = code;
+  answer_user(value->value.header.pid, &reply);
 }
