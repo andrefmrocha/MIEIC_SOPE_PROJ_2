@@ -10,6 +10,8 @@ void create_account(tlv_request_t *value);
 
 void answer_user(ret_code_t code, tlv_request_t *value);
 
+int login_user(req_header_t* account);
+
 void *consumer(void *args) {
   //   int id = *(int *) args;
   tlv_request_t *value;
@@ -32,34 +34,39 @@ void *consumer(void *args) {
 }
 
 void process_data(tlv_request_t *value) {
-  switch (value->type) {
-    case OP_CREATE_ACCOUNT:
-      /* code */
-      printf("Create account!\n");
-      create_account(value);
-      sleep(3);
-      break;
+  if(login_user(&value->value.header) == 0){
+    switch (value->type) {
+      case OP_CREATE_ACCOUNT:
+        /* code */
+        printf("Create account!\n");
+        create_account(value);
+        sleep(3);
+        break;
 
-    case OP_BALANCE:
-      printf("Get account's balance\n");
-      sleep(3);
-      break;
+      case OP_BALANCE:
+        printf("Get account's balance\n");
+        sleep(3);
+        break;
 
-    case OP_TRANSFER:
-      printf("Transfer!\n");
-      sleep(3);
-      break;
+      case OP_TRANSFER:
+        printf("Transfer!\n");
+        sleep(3);
+        break;
 
-    case OP_SHUTDOWN:
-      printf("Shutdown!\n");
-      sleep(3);
-      break;
+      case OP_SHUTDOWN:
+        printf("Shutdown!\n");
+        sleep(3);
+        break;
 
-    default:
-      printf("Unrecognized operation!\n");
-      sleep(3);
-      break;
+      default:
+        printf("Unrecognized operation!\n");
+        sleep(3);
+        break;
+    }
+  }else{
+    answer_user(RC_LOGIN_FAIL, value);
   }
+  
 }
 
 void create_account(tlv_request_t *value) {
@@ -74,18 +81,8 @@ void create_account(tlv_request_t *value) {
       code = RC_ID_IN_USE;
     }
     else {
-      char salt[SALT_LEN];
-      char hash[HASH_LEN];
-      generate_salt(salt);
-      generate_hash(salt, value->value.create.password, hash);
-      printf("Hash: %s\n", hash);
-      accounts[value->value.create.account_id] = malloc(sizeof(bank_account_t));
-      accounts[value->value.create.account_id]->account_id = value->value.create.account_id;
-      accounts[value->value.create.account_id]->balance = value->value.create.balance;
-      strcpy(accounts[value->value.create.account_id]->hash, hash);
-      strcpy(accounts[value->value.create.account_id]->salt, salt);
+      save_account(&value->value.create);
       code = RC_OK;
-      // printf("Creating account with id %d, balance %d, and password %s\n", value->value.create.account_id, value->value.create.balance, value->value.create.password);
     }
     pthread_mutex_unlock(&mutex);
   }
@@ -109,4 +106,32 @@ void answer_user(ret_code_t code, tlv_request_t *value) {
   write(fd, &reply.type, sizeof(reply.type));
   write(fd, &reply.length, sizeof(reply.length));
   write(fd, &reply.value, reply.length);
+}
+
+void save_account(req_create_account_t *account_info) {
+  char salt[SALT_LEN];
+  char hash[HASH_LEN];
+  generate_salt(salt);
+  generate_hash(salt, account_info->password, hash);
+  printf("Hash: %s\n", hash);
+  accounts[account_info->account_id] = malloc(sizeof(bank_account_t));
+  accounts[account_info->account_id]->account_id = account_info->account_id;
+  accounts[account_info->account_id]->balance = account_info->balance;
+  strcpy(accounts[account_info->account_id]->hash, hash);
+  strcpy(accounts[account_info->account_id]->salt, salt);
+}
+
+int login_user(req_header_t *account){
+  pthread_mutex_lock(&mutex);
+  char hash[HASH_LEN];
+  generate_hash(accounts[account->account_id]->salt, account->password, hash);
+  if(strcmp(hash, accounts[account->account_id]->hash) != 0){
+    pthread_mutex_unlock(&mutex);
+    return -1;
+  }
+  else
+  {
+    pthread_mutex_unlock(&mutex);
+    return 0;
+  }
 }

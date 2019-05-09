@@ -15,7 +15,11 @@ int main() {
   int fd1;
   mkfifo(SERVER_FIFO_PATH, 0660);
   initialize_sync(3);
-  // unlink(SERVER_SEMAPHORE);
+  req_create_account_t admin_account;
+  admin_account.account_id = ADMIN_ACCOUNT_ID;
+  admin_account.balance = 0;
+  strcpy(admin_account.password, "wrong_password");
+  save_account(&admin_account);
 
   while (1) {
     fd1 = open(SERVER_FIFO_PATH, O_RDONLY);
