@@ -54,6 +54,7 @@ void process_data(tlv_request_t *value) {
 
       case OP_TRANSFER:
         printf("Transfer!\n");
+        transfer(value);
         sleep(3);
         break;
 
