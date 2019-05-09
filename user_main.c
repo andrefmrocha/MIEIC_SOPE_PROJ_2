@@ -24,11 +24,13 @@ int main(int argc, char *argv[]) {
   sprintf(pid, "%u", getpid());
   strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
   strcat(answer_fifo, pid);
-  int fd_answer = open(answer_fifo, O_CREAT | O_RDONLY, 0600);
+  printf("Answer fifo: %s\n", answer_fifo);
+  mkfifo(answer_fifo, 0660);
+  int fd_answer = open(answer_fifo, O_RDONLY);
   tlv_reply_t reply;
   read(fd_answer, &reply.type, sizeof(reply.type));
   read(fd_answer, &reply.length, sizeof(reply.length));
   read(fd_answer, &reply.value, reply.length);
-  printf("Received answer code %d", reply.value.header.ret_code);
+  printf("Received answer code %d, from account id %d\n", reply.value.header.ret_code, reply.value.header.account_id);
   return 0;
 }
