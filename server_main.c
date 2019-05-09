@@ -7,19 +7,19 @@
 #include "constants.h"
 #include "producer.h"
 #include "semaphore.h"
-#include "sync.h"
 #include "types.h"
+#include "cli.h"
 
-int main() {
+int main(int argc, char * argv[]) {
 
+  if(argc != 3){
+    printf("Usage: server num_offices password");
+    exit(1);
+  }
+
+  server_cli(argv);
   int fd1;
   mkfifo(SERVER_FIFO_PATH, 0660);
-  initialize_sync(3);
-  req_create_account_t admin_account;
-  admin_account.account_id = ADMIN_ACCOUNT_ID;
-  admin_account.balance = 0;
-  strcpy(admin_account.password, "wrong_password");
-  save_account(&admin_account);
 
   while (1) {
     fd1 = open(SERVER_FIFO_PATH, O_RDONLY);

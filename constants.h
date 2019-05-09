@@ -37,6 +37,8 @@
 #define SPACE_STR " "
 #define MAX_ARGUMENTS 20
 
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
 // User CLI Constants
 #define ACCOUNT_ID 1
 #define OP_DELAY 3
@@ -47,3 +49,6 @@
 #define CRT_ACCOUNT_PW 2
 #define TRNF_ACC_ID    0
 #define TRNF_ACC_AMNT  1
+
+// Server CLI Constants
+#define NUM_THRS   3

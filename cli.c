@@ -95,3 +95,16 @@ int parse_string(char *string, char *parsed_string[]) {
   }
   return i;
 }
+
+void server_cli(char *argv[]){
+  initialize_sync(MIN(atoi(argv[1]), MAX_BANK_OFFICES));
+  req_create_account_t admin_account;
+  admin_account.account_id = ADMIN_ACCOUNT_ID;
+  admin_account.balance = 0;
+  if(strlen(argv[2]) < MIN_PASSWORD_LEN || strlen(argv[2]) > MAX_PASSWORD_LEN){
+    printf("Invalid password size\n");
+    exit(1);
+  }
+  strcpy(admin_account.password, argv[2]);
+  save_account(&admin_account);
+}
