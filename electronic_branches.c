@@ -8,7 +8,7 @@ void process_data(tlv_request_t *value);
 
 void create_account(tlv_request_t *value);
 
-void answer_user(ret_code_t code, tlv_request_t *value);
+void answer_user(pid_t pid, tlv_reply_t * reply);
 
 int login_user(req_header_t* account);
 
@@ -64,7 +64,13 @@ void process_data(tlv_request_t *value) {
         break;
     }
   }else{
-    answer_user(RC_LOGIN_FAIL, value);
+    tlv_reply_t reply;
+    reply.type = value->type;
+    reply.value.header.account_id = value->value.header.account_id;
+    reply.value.header.ret_code = RC_LOGIN_FAIL;
+    reply.length = sizeof(reply.value);
+    printf("Return code: %d\n", RC_LOGIN_FAIL);
+    answer_user(value->value.header.pid, &reply);
   }
   
 }
@@ -86,26 +92,26 @@ void create_account(tlv_request_t *value) {
     }
     pthread_mutex_unlock(&mutex);
   }
-  answer_user(code, value);
-}
-
-void answer_user(ret_code_t code, tlv_request_t *value) {
-  printf("Return code: %d\n", code);
-  char answer_fifo[USER_FIFO_PATH_LEN];
-  char pid[WIDTH_ID + 1];
-  sprintf(pid, "%u", value->value.header.pid);
-  strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
-  strcat(answer_fifo, pid);
-  printf("Answer fifo: %s\n", answer_fifo);
-  int fd = open(answer_fifo, O_WRONLY);
   tlv_reply_t reply;
   reply.type = value->type;
   reply.value.header.account_id = value->value.header.account_id;
   reply.value.header.ret_code = code;
   reply.length = sizeof(reply.value);
-  write(fd, &reply.type, sizeof(reply.type));
-  write(fd, &reply.length, sizeof(reply.length));
-  write(fd, &reply.value, reply.length);
+  printf("Return code: %d\n", code);
+  answer_user(value->value.header.pid, &reply);
+}
+
+void answer_user(pid_t user_pid, tlv_reply_t * reply) {
+  char answer_fifo[USER_FIFO_PATH_LEN];
+  char pid[WIDTH_ID + 1];
+  sprintf(pid, "%u", user_pid);
+  strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
+  strcat(answer_fifo, pid);
+  printf("Answer fifo: %s\n", answer_fifo);
+  int fd = open(answer_fifo, O_WRONLY);
+  write(fd, &reply->type, sizeof(reply->type));
+  write(fd, &reply->length, sizeof(reply->length));
+  write(fd, &reply->value, reply->length);
 }
 
 void save_account(req_create_account_t *account_info) {
