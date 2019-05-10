@@ -38,7 +38,8 @@ void *consumer(void *args) {
 }
 
 void process_data(tlv_request_t *value) {
-  if (login_user(&value->value.header) == 0) {
+  ret_code_t code = login_user(&value->value.header);
+  if (code == 0) {
     switch (value->type) {
       case OP_CREATE_ACCOUNT:
         printf("Create account!\n");
@@ -73,9 +74,9 @@ void process_data(tlv_request_t *value) {
     tlv_reply_t reply;
     reply.type = value->type;
     reply.value.header.account_id = value->value.header.account_id;
-    reply.value.header.ret_code = RC_LOGIN_FAIL;
+    reply.value.header.ret_code = code;
     reply.length = sizeof(reply.value);
-    printf("Return code: %d\n", RC_LOGIN_FAIL);
+    printf("Return code: %d\n", code);
     answer_user(value->value.header.pid, &reply);
   }
 }
@@ -134,15 +135,19 @@ void save_account(req_create_account_t *account_info) {
 
 int login_user(req_header_t *account) {
   pthread_mutex_lock(&mutex);
+  if(accounts[account->account_id] == NULL){
+    pthread_mutex_unlock(&mutex);
+    return RC_ID_NOT_FOUND;
+  }
   char hash[HASH_LEN];
   generate_hash(accounts[account->account_id]->salt, account->password, hash);
   if (strcmp(hash, accounts[account->account_id]->hash) != 0) {
     pthread_mutex_unlock(&mutex);
-    return -1;
+    return RC_LOGIN_FAIL;
   }
   else {
     pthread_mutex_unlock(&mutex);
-    return 0;
+    return RC_OK;
   }
 }
 
@@ -198,6 +203,6 @@ void transfer(tlv_request_t *value) {
   }
   reply.value.header.ret_code = code;
   reply.length = sizeof(reply.value);
-
+  pthread_mutex_unlock(&mutex);
   answer_user(value->value.header.pid, &reply);
 }

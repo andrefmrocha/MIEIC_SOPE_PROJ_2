@@ -2,11 +2,13 @@
 
 static tlv_request_t *data[MAX_DATA] = {NULL};
 static pthread_mutex_t data_mut = PTHREAD_MUTEX_INITIALIZER;
+static int num_threads;
 
 sem_t empty,
   full;
 
 void initialize_sync(int max_threads) {
+  num_threads = max_threads;
   sem_init(&empty, 0, max_threads);
   sem_init(&full, 0, 0);
   for (int i = 0; i < max_threads; i++) {
@@ -38,4 +40,14 @@ void push_data(tlv_request_t *pushing_data) {
     }
   }
   pthread_mutex_unlock(&data_mut);
+}
+
+int stop_sync(){
+  int empty_num;
+  sem_getvalue(&empty, &empty_num);
+  int active_threads = num_threads - empty_num;
+  for(int i = 0; i < num_threads; i++){
+    sem_post(&full);
+  }
+  return active_threads;
 }

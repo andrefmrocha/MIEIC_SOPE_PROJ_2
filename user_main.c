@@ -38,5 +38,8 @@ int main(int argc, char *argv[]) {
   if (reply.type == OP_TRANSFER) {
     printf("Current balance: %u\n", reply.value.transfer.balance);
   }
+  if (reply.type == OP_SHUTDOWN) {
+    printf("Shutted down with %d active offices\n", reply.value.shutdown.active_offices);
+  }
   return 0;
 }
