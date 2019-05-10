@@ -21,9 +21,6 @@ void *consumer(void *args) {
   tlv_request_t *value;
   if (args == NULL) {
     while (1) {
-      int sem;
-      sem_getvalue(&full, &sem);
-      printf("Consumer semaphore value %d\n", sem);
       sem_wait(&full);
       value = retrieve_data();
       printf("Received request!\n");
@@ -39,6 +36,7 @@ void *consumer(void *args) {
 }
 
 void process_data(tlv_request_t *value) {
+  usleep(value->value.header.op_delay_ms);
   ret_code_t code = login_user(&value->value.header);
   if (code == 0) {
     switch (value->type) {
