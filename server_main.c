@@ -13,7 +13,7 @@
 int main(int argc, char *argv[]) {
 
   if (argc != 3) {
-    printf("Usage: server num_offices password");
+    printf("Usage: server num_offices password \n");
     exit(1);
   }
 
