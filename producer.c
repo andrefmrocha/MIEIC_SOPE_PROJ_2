@@ -8,19 +8,17 @@ void produce_data(tlv_request_t *request) {
 }
 
 int initialize_shutdown(tlv_request_t * request){
+  tlv_reply_t reply;
+  reply.type = OP_SHUTDOWN;
+  reply.value.header.account_id = ADMIN_ACCOUNT_ID;
+
   if(request->value.header.account_id == ADMIN_ACCOUNT_ID){
     int active_threads = stop_sync();
-    tlv_reply_t reply;
-    reply.type = OP_SHUTDOWN;
-    reply.value.header.account_id = ADMIN_ACCOUNT_ID;
     reply.value.header.ret_code = RC_OK;
     reply.value.shutdown.active_offices = active_threads;
     answer_user(request->value.header.pid, &reply);
     return 0;
   }else{
-    tlv_reply_t reply;
-    reply.type = OP_SHUTDOWN;
-    reply.value.header.account_id = ADMIN_ACCOUNT_ID;
     reply.value.header.ret_code = RC_OP_NALLOW;
     answer_user(request->value.header.pid, &reply);
     return -1;

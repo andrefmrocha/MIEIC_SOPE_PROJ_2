@@ -26,8 +26,8 @@ void initialize_sync(int max_threads) {
 
 tlv_request_t *retrieve_data() {
   tlv_request_t *saving_data = NULL;
+  pthread_mutex_lock(&data_mut);
   for (int i = 0; i < MAX_DATA; i++) {
-    pthread_mutex_lock(&data_mut);
     if (data[i] != NULL) {
       saving_data = data[i];
       data[i] = NULL;

@@ -51,5 +51,5 @@ int main(int argc, char *argv[]) {
   }
 
   unlink(SERVER_FIFO_PATH);
-  return 0;
+  pthread_exit(0);
 }

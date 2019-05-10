@@ -23,6 +23,7 @@ void *consumer(void *args) {
     while (1) {
       int sem;
       sem_getvalue(&full, &sem);
+      printf("Consumer semaphore value %d\n", sem);
       sem_wait(&full);
       value = retrieve_data();
       printf("Received request!\n");
@@ -45,6 +46,7 @@ void process_data(tlv_request_t *value) {
         printf("Create account!\n");
         create_account(value);
         sleep(20);
+        printf("Leaving create account\n");
         break;
 
       case OP_BALANCE:
@@ -113,7 +115,7 @@ void answer_user(pid_t user_pid, tlv_reply_t *reply) {
   sprintf(pid, "%u", user_pid);
   strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
   strcat(answer_fifo, pid);
-  printf("Answer fifo: %s\n", answer_fifo);
+  printf("Answer fifo: %s with the code %d\n", answer_fifo, reply->value.header.ret_code);
   int fd = open(answer_fifo, O_WRONLY);
   write(fd, &reply->type, sizeof(reply->type));
   write(fd, &reply->length, sizeof(reply->length));
