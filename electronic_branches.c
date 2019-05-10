@@ -21,7 +21,9 @@ void *consumer(void *args) {
   tlv_request_t *value;
   if (args == NULL) {
     while (1) {
-      sem_wait(&full);
+      sem_wait
+      
+      (&full);
       value = retrieve_data();
       printf("Received request!\n");
       if (value == NULL)
@@ -36,7 +38,6 @@ void *consumer(void *args) {
 }
 
 void process_data(tlv_request_t *value) {
-  usleep(value->value.header.op_delay_ms);
   ret_code_t code = login_user(&value->value.header);
   if (code == 0) {
     switch (value->type) {
@@ -135,6 +136,7 @@ void save_account(req_create_account_t *account_info) {
 
 int login_user(req_header_t *account) {
   pthread_mutex_lock(&mutex);
+  usleep(account->op_delay_ms);
   if(accounts[account->account_id] == NULL){
     pthread_mutex_unlock(&mutex);
     return RC_ID_NOT_FOUND;
