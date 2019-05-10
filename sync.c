@@ -15,6 +15,13 @@ void initialize_sync(int max_threads) {
     pthread_t tid;
     pthread_create(&tid, NULL, consumer, NULL);
   }
+
+  sem_t* sem = sem_open(SERVER_SEMAPHORE, O_CREAT, 0600, 1);
+
+  if(sem == SEM_FAILED){
+    printf("Failed to open server semaphore!\n");
+    exit(1);
+  }
 }
 
 tlv_request_t *retrieve_data() {

@@ -44,29 +44,29 @@ void process_data(tlv_request_t *value) {
       case OP_CREATE_ACCOUNT:
         printf("Create account!\n");
         create_account(value);
-        sleep(3);
+        sleep(20);
         break;
 
       case OP_BALANCE:
         printf("Get account's balance\n");
         check_balance(value);
-        sleep(3);
+        sleep(20);
         break;
 
       case OP_TRANSFER:
         printf("Transfer!\n");
         transfer(value);
-        sleep(3);
+        sleep(20);
         break;
 
       case OP_SHUTDOWN:
         printf("Shutdown!\n");
-        sleep(3);
+        sleep(20);
         break;
 
       default:
         printf("Unrecognized operation!\n");
-        sleep(3);
+        sleep(20);
         break;
     }
   }

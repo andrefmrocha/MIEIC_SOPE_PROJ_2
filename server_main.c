@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
     }
     if(request->type == OP_SHUTDOWN){
       if(initialize_shutdown(request) == 0){
+        fchmod(fd1, S_IRUSR | S_IRGRP | S_IROTH);
         break;
       }
     }

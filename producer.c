@@ -25,6 +25,4 @@ int initialize_shutdown(tlv_request_t * request){
     answer_user(request->value.header.pid, &reply);
     return -1;
   }
-  
-
 }
