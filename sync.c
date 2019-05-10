@@ -39,8 +39,8 @@ tlv_request_t *retrieve_data() {
 }
 
 void push_data(tlv_request_t *pushing_data) {
+  pthread_mutex_lock(&data_mut);
   for (int i = 0; i < MAX_DATA; i++) {
-    pthread_mutex_lock(&data_mut);
     if (data[i] == NULL) {
       data[i] = pushing_data;
       break;
