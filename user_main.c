@@ -14,11 +14,21 @@ int main(int argc, char *argv[]) {
   }
   tlv_request_t request;
   user_cli(&request, argv);
+  sem_t * sem = sem_open(SERVER_SEMAPHORE, 0, 0600);
+  if(sem == SEM_FAILED){
+    printf("Failed to open server semaphore!\n");
+    exit(1);
+  }
+  int value;
+  sem_getvalue(sem, &value);
+  printf("Semaphore value : %d\n", value);
+  sem_wait(sem);
   int fd_server = open(SERVER_FIFO_PATH, O_RDWR);
   write(fd_server, &request.type, sizeof(op_type_t));
   write(fd_server, &request.length, sizeof(request.length));
   write(fd_server, &request.value, sizeof(request.value));
   close(fd_server);
+  sem_post(sem);
   char answer_fifo[USER_FIFO_PATH_LEN];
   char pid[WIDTH_ID + 1];
   sprintf(pid, "%u", getpid());
@@ -37,6 +47,9 @@ int main(int argc, char *argv[]) {
   }
   if (reply.type == OP_TRANSFER) {
     printf("Current balance: %u\n", reply.value.transfer.balance);
+  }
+  if (reply.type == OP_SHUTDOWN) {
+    printf("Shutted down with %d active offices\n", reply.value.shutdown.active_offices);
   }
   return 0;
 }

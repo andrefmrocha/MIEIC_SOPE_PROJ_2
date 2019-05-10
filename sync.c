@@ -2,23 +2,32 @@
 
 static tlv_request_t *data[MAX_DATA] = {NULL};
 static pthread_mutex_t data_mut = PTHREAD_MUTEX_INITIALIZER;
+static int num_threads;
 
 sem_t empty,
   full;
 
 void initialize_sync(int max_threads) {
+  num_threads = max_threads;
   sem_init(&empty, 0, max_threads);
   sem_init(&full, 0, 0);
   for (int i = 0; i < max_threads; i++) {
     pthread_t tid;
     pthread_create(&tid, NULL, consumer, NULL);
   }
+
+  sem_t* sem = sem_open(SERVER_SEMAPHORE, O_CREAT, 0600, 1);
+
+  if(sem == SEM_FAILED){
+    printf("Failed to open server semaphore!\n");
+    exit(1);
+  }
 }
 
 tlv_request_t *retrieve_data() {
   tlv_request_t *saving_data = NULL;
+  pthread_mutex_lock(&data_mut);
   for (int i = 0; i < MAX_DATA; i++) {
-    pthread_mutex_lock(&data_mut);
     if (data[i] != NULL) {
       saving_data = data[i];
       data[i] = NULL;
@@ -30,12 +39,22 @@ tlv_request_t *retrieve_data() {
 }
 
 void push_data(tlv_request_t *pushing_data) {
+  pthread_mutex_lock(&data_mut);
   for (int i = 0; i < MAX_DATA; i++) {
-    pthread_mutex_lock(&data_mut);
     if (data[i] == NULL) {
       data[i] = pushing_data;
       break;
     }
   }
   pthread_mutex_unlock(&data_mut);
+}
+
+int stop_sync(){
+  int empty_num;
+  sem_getvalue(&empty, &empty_num);
+  int active_threads = num_threads - empty_num;
+  for(int i = 0; i < num_threads; i++){
+    sem_post(&full);
+  }
+  return active_threads;
 }

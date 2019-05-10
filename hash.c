@@ -3,10 +3,8 @@
 void generate_salt(char *salt) {
   time_t t;
   srand((unsigned) time(&t));
-  const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJK...";
   for (size_t n = 0; n < SALT_LEN - 2; n++) {
-    int key = rand() % (int) (sizeof charset - 1);
-    salt[n] = charset[key];
+    sprintf(salt + n, "%x", rand() % 0xff);
   }
   salt[SALT_LEN - 1] = '\0';
   printf("Salt: %s\n", salt);

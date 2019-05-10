@@ -12,3 +12,5 @@ void initialize_sync(int max_threads);
 tlv_request_t *retrieve_data();
 
 void push_data(tlv_request_t *data);
+
+int stop_sync();

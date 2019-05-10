@@ -40,13 +40,16 @@ int main(int argc, char *argv[]) {
       printf("EOF, continuining...\n");
       continue;
     }
-
+    if(request->type == OP_SHUTDOWN){
+      if(initialize_shutdown(request) == 0){
+        fchmod(fd1, S_IRUSR | S_IRGRP | S_IROTH);
+        break;
+      }
+    }
     produce_data(request);
     close(fd1);
   }
 
   unlink(SERVER_FIFO_PATH);
-  printf("Hello World!\n");
-
-  return 0;
+  pthread_exit(0);
 }

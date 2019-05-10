@@ -21,9 +21,9 @@ void *consumer(void *args) {
   tlv_request_t *value;
   if (args == NULL) {
     while (1) {
-      int sem;
-      sem_getvalue(&full, &sem);
-      sem_wait(&full);
+      sem_wait
+      
+      (&full);
       value = retrieve_data();
       printf("Received request!\n");
       if (value == NULL)
@@ -38,34 +38,36 @@ void *consumer(void *args) {
 }
 
 void process_data(tlv_request_t *value) {
-  if (login_user(&value->value.header) == 0) {
+  ret_code_t code = login_user(&value->value.header);
+  if (code == 0) {
     switch (value->type) {
       case OP_CREATE_ACCOUNT:
         printf("Create account!\n");
         create_account(value);
-        sleep(3);
+        sleep(20);
+        printf("Leaving create account\n");
         break;
 
       case OP_BALANCE:
         printf("Get account's balance\n");
         check_balance(value);
-        sleep(3);
+        sleep(20);
         break;
 
       case OP_TRANSFER:
         printf("Transfer!\n");
         transfer(value);
-        sleep(3);
+        sleep(20);
         break;
 
       case OP_SHUTDOWN:
         printf("Shutdown!\n");
-        sleep(3);
+        sleep(20);
         break;
 
       default:
         printf("Unrecognized operation!\n");
-        sleep(3);
+        sleep(20);
         break;
     }
   }
@@ -73,9 +75,9 @@ void process_data(tlv_request_t *value) {
     tlv_reply_t reply;
     reply.type = value->type;
     reply.value.header.account_id = value->value.header.account_id;
-    reply.value.header.ret_code = RC_LOGIN_FAIL;
+    reply.value.header.ret_code = code;
     reply.length = sizeof(reply.value);
-    printf("Return code: %d\n", RC_LOGIN_FAIL);
+    printf("Return code: %d\n", code);
     answer_user(value->value.header.pid, &reply);
   }
 }
@@ -112,7 +114,7 @@ void answer_user(pid_t user_pid, tlv_reply_t *reply) {
   sprintf(pid, "%u", user_pid);
   strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
   strcat(answer_fifo, pid);
-  printf("Answer fifo: %s\n", answer_fifo);
+  printf("Answer fifo: %s with the code %d\n", answer_fifo, reply->value.header.ret_code);
   int fd = open(answer_fifo, O_WRONLY);
   write(fd, &reply->type, sizeof(reply->type));
   write(fd, &reply->length, sizeof(reply->length));
@@ -134,15 +136,20 @@ void save_account(req_create_account_t *account_info) {
 
 int login_user(req_header_t *account) {
   pthread_mutex_lock(&mutex);
+  usleep(account->op_delay_ms);
+  if(accounts[account->account_id] == NULL){
+    pthread_mutex_unlock(&mutex);
+    return RC_ID_NOT_FOUND;
+  }
   char hash[HASH_LEN];
   generate_hash(accounts[account->account_id]->salt, account->password, hash);
   if (strcmp(hash, accounts[account->account_id]->hash) != 0) {
     pthread_mutex_unlock(&mutex);
-    return -1;
+    return RC_LOGIN_FAIL;
   }
   else {
     pthread_mutex_unlock(&mutex);
-    return 0;
+    return RC_OK;
   }
 }
 
@@ -198,6 +205,6 @@ void transfer(tlv_request_t *value) {
   }
   reply.value.header.ret_code = code;
   reply.length = sizeof(reply.value);
-
+  pthread_mutex_unlock(&mutex);
   answer_user(value->value.header.pid, &reply);
 }
