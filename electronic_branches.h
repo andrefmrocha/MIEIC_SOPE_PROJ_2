@@ -6,10 +6,10 @@
 #include "semaphore.h"
 #include "sync.h"
 #include "types.h"
+#include "sope.h"
 
 void *consumer(void *args);
 
-void save_account(req_create_account_t *account_info);
+void save_account(req_create_account_t *account_info, int thread_id);
 
-void answer_user(pid_t user_pid, tlv_reply_t *reply);
-
+void answer_user(pid_t user_pid, tlv_reply_t *reply, int thread_id);

@@ -9,6 +9,7 @@
 #include "producer.h"
 #include "semaphore.h"
 #include "types.h"
+#include "sope.h"
 
 int main(int argc, char *argv[]) {
 
@@ -28,20 +29,16 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     tlv_request_t *request = malloc(sizeof(tlv_request_t));
-    if (read(fd1, &request->type, sizeof(request->type)) == 0) {
+
+    if(read_request(request, fd1)){
       printf("EOF, continuining...\n");
+      free(request);
       continue;
     }
-    if (read(fd1, &request->length, sizeof(request->length)) == 0) {
-      printf("EOF, continuining...\n");
-      continue;
-    }
-    if (read(fd1, &request->value, request->length) == 0) {
-      printf("EOF, continuining...\n");
-      continue;
-    }
+    
+    logRequest(STDOUT_FILENO, MAIN_THREAD_ID, request);
     if(request->type == OP_SHUTDOWN){
-      if(initialize_shutdown(request) == 0){
+      if(initialize_shutdown(request, MAIN_THREAD_ID) == 0){
         fchmod(fd1, S_IRUSR | S_IRGRP | S_IROTH);
         break;
       }

@@ -9,8 +9,8 @@
 
 void initialize_sync(int max_threads);
 
-tlv_request_t *retrieve_data();
+tlv_request_t *retrieve_data(int thread_id);
 
-void push_data(tlv_request_t *data);
+void push_data(tlv_request_t *data, int thread_id);
 
-int stop_sync();
+int stop_sync(tlv_request_t * request, int thread_id);

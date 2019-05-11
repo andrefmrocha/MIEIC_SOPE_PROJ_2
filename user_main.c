@@ -19,6 +19,15 @@ int main(int argc, char *argv[]) {
     printf("Failed to open server semaphore!\n");
     exit(1);
   }
+
+  char answer_fifo[USER_FIFO_PATH_LEN];
+  char pid[WIDTH_ID + 1];
+  sprintf(pid, "%u", getpid());
+  strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
+  strcat(answer_fifo, pid);
+  printf("Answer fifo: %s\n", answer_fifo);
+  mkfifo(answer_fifo, 0660);
+  
   int value;
   sem_getvalue(sem, &value);
   printf("Semaphore value : %d\n", value);
@@ -29,13 +38,6 @@ int main(int argc, char *argv[]) {
   write(fd_server, &request.value, sizeof(request.value));
   close(fd_server);
   sem_post(sem);
-  char answer_fifo[USER_FIFO_PATH_LEN];
-  char pid[WIDTH_ID + 1];
-  sprintf(pid, "%u", getpid());
-  strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
-  strcat(answer_fifo, pid);
-  printf("Answer fifo: %s\n", answer_fifo);
-  mkfifo(answer_fifo, 0660);
   int fd_answer = open(answer_fifo, O_RDONLY);
   tlv_reply_t reply;
   read(fd_answer, &reply.type, sizeof(reply.type));

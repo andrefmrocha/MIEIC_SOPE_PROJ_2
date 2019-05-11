@@ -110,5 +110,5 @@ void server_cli(char *argv[]) {
     exit(1);
   }
   strcpy(admin_account.password, argv[2]);
-  save_account(&admin_account);
+  save_account(&admin_account, MAIN_THREAD_ID);
 }

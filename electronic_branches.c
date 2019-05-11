@@ -4,32 +4,34 @@ extern sem_t empty, full;
 static bank_account_t *accounts[MAX_BANK_ACCOUNTS] = {NULL};
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void process_data(tlv_request_t *value);
+void process_data(tlv_request_t *value, int thread_id);
 
-void create_account(tlv_request_t *value);
+void create_account(tlv_request_t *value, int thread_id);
 
-void answer_user(pid_t pid, tlv_reply_t *reply);
+void check_balance(tlv_request_t *value, int thread_id);
 
-void check_balance(tlv_request_t *value);
+void transfer(tlv_request_t *value, int thread_id);
 
-void transfer(tlv_request_t *value);
-
-int login_user(req_header_t *account);
+int login_user(req_header_t *account, int thread_id);
 
 void *consumer(void *args) {
-  //   int id = *(int *) args;
+  int id = *(int *) args;
   tlv_request_t *value;
-  if (args == NULL) {
+  if (args != NULL) {
     while (1) {
-      sem_wait
-      
-      (&full);
-      value = retrieve_data();
+      int sem_value;
+      sem_getvalue(&full, &sem_value);
+      logSyncMechSem(STDOUT_FILENO, id, SYNC_OP_SEM_WAIT, SYNC_ROLE_CONSUMER, 0, sem_value);
+      sem_wait(&full);
+      value = retrieve_data(id);
       printf("Received request!\n");
       if (value == NULL)
         break;
       sem_post(&empty);
-      process_data(value);
+      sem_getvalue(&empty, &sem_value);
+      logSyncMechSem(STDOUT_FILENO, id, SYNC_OP_SEM_POST, SYNC_ROLE_CONSUMER, value->value.header.pid, sem_value);
+      logRequest(STDOUT_FILENO, MAIN_THREAD_ID, value);
+      process_data(value, id);
     }
   }
   printf("Posting on empty\n");
@@ -38,26 +40,26 @@ void *consumer(void *args) {
   pthread_exit(0);
 }
 
-void process_data(tlv_request_t *value) {
-  ret_code_t code = login_user(&value->value.header);
+void process_data(tlv_request_t *value, int thread_id) {
+  ret_code_t code = login_user(&value->value.header, thread_id);
   if (code == 0) {
     switch (value->type) {
       case OP_CREATE_ACCOUNT:
         printf("Create account!\n");
-        create_account(value);
+        create_account(value, thread_id);
         sleep(20);
         printf("Leaving create account\n");
         break;
 
       case OP_BALANCE:
         printf("Get account's balance\n");
-        check_balance(value);
+        check_balance(value, thread_id);
         sleep(20);
         break;
 
       case OP_TRANSFER:
         printf("Transfer!\n");
-        transfer(value);
+        transfer(value, thread_id);
         sleep(20);
         break;
 
@@ -79,27 +81,28 @@ void process_data(tlv_request_t *value) {
     reply.value.header.ret_code = code;
     reply.length = sizeof(rep_header_t) + sizeof(rep_shutdown_t);
     printf("Return code: %d\n", code);
-    answer_user(value->value.header.pid, &reply);
+    answer_user(value->value.header.pid, &reply, thread_id);
   }
   free(value);
 }
 
-void create_account(tlv_request_t *value) {
+void create_account(tlv_request_t *value, int thread_id) {
   ret_code_t code = RC_OTHER;
   if (value->value.header.account_id != ADMIN_ACCOUNT_ID) {
     code = RC_OP_NALLOW;
   }
   else {
-
+    logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
     pthread_mutex_lock(&mutex);
     if (accounts[value->value.create.account_id] != NULL) {
       code = RC_ID_IN_USE;
     }
     else {
-      save_account(&value->value.create);
+      save_account(&value->value.create, thread_id);
       code = RC_OK;
     }
     pthread_mutex_unlock(&mutex);
+    logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
   }
   tlv_reply_t reply;
   reply.type = value->type;
@@ -107,16 +110,17 @@ void create_account(tlv_request_t *value) {
   reply.value.header.ret_code = code;
   reply.length = sizeof(rep_header_t);
   printf("Return code: %d\n", code);
-  answer_user(value->value.header.pid, &reply);
+  answer_user(value->value.header.pid, &reply, thread_id);
 }
 
-void answer_user(pid_t user_pid, tlv_reply_t *reply) {
+void answer_user(pid_t user_pid, tlv_reply_t *reply, int thread_id) {
   char answer_fifo[USER_FIFO_PATH_LEN];
   char pid[WIDTH_ID + 1];
   sprintf(pid, "%u", user_pid);
   strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
   strcat(answer_fifo, pid);
   printf("Answer fifo: %s with the code %d\n", answer_fifo, reply->value.header.ret_code);
+  logReply(STDOUT_FILENO, thread_id, reply);
   int fd = open(answer_fifo, O_WRONLY);
   if(fd == -1){
     perror("Failed to open answer fifo!\n");
@@ -135,7 +139,7 @@ void answer_user(pid_t user_pid, tlv_reply_t *reply) {
   // write(fd, &reply->value, reply->length);
 }
 
-void save_account(req_create_account_t *account_info) {
+void save_account(req_create_account_t *account_info, int thread_id) {
   char salt[SALT_LEN];
   char hash[HASH_LEN];
   generate_salt(salt);
@@ -146,31 +150,37 @@ void save_account(req_create_account_t *account_info) {
   accounts[account_info->account_id]->balance = account_info->balance;
   strcpy(accounts[account_info->account_id]->hash, hash);
   strcpy(accounts[account_info->account_id]->salt, salt);
+  logAccountCreation(STDOUT_FILENO, thread_id, accounts[account_info->account_id]);
 }
 
-int login_user(req_header_t *account) {
+int login_user(req_header_t *account, int thread_id) {
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, account->account_id);
   pthread_mutex_lock(&mutex);
   usleep(account->op_delay_ms);
   if(accounts[account->account_id] == NULL){
     pthread_mutex_unlock(&mutex);
+    logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, account->account_id);
     return RC_ID_NOT_FOUND;
   }
   char hash[HASH_LEN];
   generate_hash(accounts[account->account_id]->salt, account->password, hash);
   if (strcmp(hash, accounts[account->account_id]->hash) != 0) {
     pthread_mutex_unlock(&mutex);
+    logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, account->account_id);
     return RC_LOGIN_FAIL;
   }
   else {
     pthread_mutex_unlock(&mutex);
+    logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, account->account_id);
     return RC_OK;
   }
 }
 
-void check_balance(tlv_request_t *value) {
+void check_balance(tlv_request_t *value, int thread_id) {
   ret_code_t code = RC_OTHER;
   tlv_reply_t reply;
   reply.type = value->type;
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
   pthread_mutex_lock(&mutex);
   if (accounts[value->value.header.account_id] == NULL) {
     code = RC_ID_NOT_FOUND;
@@ -184,16 +194,18 @@ void check_balance(tlv_request_t *value) {
     reply.value.balance.balance = accounts[value->value.header.account_id]->balance;
   }
   pthread_mutex_unlock(&mutex);
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
   reply.length = sizeof(rep_header_t) + sizeof(rep_balance_t);
   reply.value.header.ret_code = code;
-  answer_user(value->value.header.pid, &reply);
+  answer_user(value->value.header.pid, &reply, thread_id);
 }
 
-void transfer(tlv_request_t *value) {
+void transfer(tlv_request_t *value, int thread_id) {
   ret_code_t code = RC_OTHER;
   tlv_reply_t reply;
   reply.type = value->type;
   reply.value.header.account_id = value->value.header.account_id;
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
   pthread_mutex_lock(&mutex);
   reply.value.transfer.balance = accounts[value->value.header.account_id]->balance;
   if (value->value.header.account_id == ADMIN_ACCOUNT_ID) {
@@ -220,5 +232,6 @@ void transfer(tlv_request_t *value) {
   reply.value.header.ret_code = code;
   reply.length = sizeof(rep_header_t) + sizeof(rep_transfer_t);
   pthread_mutex_unlock(&mutex);
-  answer_user(value->value.header.pid, &reply);
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
+  answer_user(value->value.header.pid, &reply, thread_id);
 }
