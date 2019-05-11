@@ -32,6 +32,7 @@ void *consumer(void *args) {
       process_data(value);
     }
   }
+  printf("Posting on empty\n");
   sem_post(&empty);
   printf("Found only null information, exiting...\n");
   pthread_exit(0);
@@ -117,9 +118,21 @@ void answer_user(pid_t user_pid, tlv_reply_t *reply) {
   strcat(answer_fifo, pid);
   printf("Answer fifo: %s with the code %d\n", answer_fifo, reply->value.header.ret_code);
   int fd = open(answer_fifo, O_WRONLY);
-  write(fd, &reply->type, sizeof(reply->type));
-  write(fd, &reply->length, sizeof(reply->length));
-  write(fd, &reply->value, reply->length);
+  if(fd == -1){
+    perror("Failed to open answer fifo!\n");
+    return;
+  }
+  if (write(fd, &reply->type, sizeof(reply->type)) == -1){
+    printf("Failed to write message\n");
+  }
+  if (write(fd, &reply->length, sizeof(reply->length)) == -1) {
+    printf("Failed to write message\n");
+  }
+  if (write(fd, &reply->value, reply->length) == -1) {
+    printf("Failed to write message\n");
+  }
+  // write(fd, &reply->length, sizeof(reply->length));
+  // write(fd, &reply->value, reply->length);
 }
 
 void save_account(req_create_account_t *account_info) {

@@ -50,11 +50,10 @@ void push_data(tlv_request_t *pushing_data) {
 }
 
 int stop_sync(){
-  int empty_num;
-  sem_getvalue(&empty, &empty_num);
-  int active_threads = num_threads - empty_num;
+  int full_num;
+  sem_getvalue(&full, &full_num);
   for(int i = 0; i < num_threads; i++){
     sem_post(&full);
   }
-  return active_threads;
+  return full_num;
 }
