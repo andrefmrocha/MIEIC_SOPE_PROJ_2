@@ -76,10 +76,11 @@ void process_data(tlv_request_t *value) {
     reply.type = value->type;
     reply.value.header.account_id = value->value.header.account_id;
     reply.value.header.ret_code = code;
-    reply.length = sizeof(reply.value);
+    reply.length = sizeof(rep_header_t) + sizeof(rep_shutdown_t);
     printf("Return code: %d\n", code);
     answer_user(value->value.header.pid, &reply);
   }
+  free(value);
 }
 
 void create_account(tlv_request_t *value) {
@@ -103,7 +104,7 @@ void create_account(tlv_request_t *value) {
   reply.type = value->type;
   reply.value.header.account_id = value->value.header.account_id;
   reply.value.header.ret_code = code;
-  reply.length = sizeof(reply.value);
+  reply.length = sizeof(rep_header_t);
   printf("Return code: %d\n", code);
   answer_user(value->value.header.pid, &reply);
 }
@@ -168,9 +169,9 @@ void check_balance(tlv_request_t *value) {
     code = RC_OK;
     reply.value.header.account_id = value->value.header.account_id;
     reply.value.balance.balance = accounts[value->value.header.account_id]->balance;
-    reply.length = sizeof(reply.value);
   }
   pthread_mutex_unlock(&mutex);
+  reply.length = sizeof(rep_header_t) + sizeof(rep_balance_t);
   reply.value.header.ret_code = code;
   answer_user(value->value.header.pid, &reply);
 }
@@ -204,7 +205,7 @@ void transfer(tlv_request_t *value) {
     reply.value.transfer.balance = accounts[value->value.header.account_id]->balance;
   }
   reply.value.header.ret_code = code;
-  reply.length = sizeof(reply.value);
+  reply.length = sizeof(rep_header_t) + sizeof(rep_transfer_t);
   pthread_mutex_unlock(&mutex);
   answer_user(value->value.header.pid, &reply);
 }

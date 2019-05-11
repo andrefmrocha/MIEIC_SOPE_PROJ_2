@@ -47,6 +47,7 @@ void user_cli(tlv_request_t *request, char *argv[]) {
            request->value.create.account_id,
            request->value.create.balance,
            request->value.create.password);
+    request->length = sizeof(req_create_account_t) + sizeof(req_header_t);
   }
   else if (operation_type == OP_TRANSFER) {
     char *parsed_info[MAX_ARGUMENTS];
@@ -78,9 +79,12 @@ void user_cli(tlv_request_t *request, char *argv[]) {
     }
 
     printf("Transfering %d to account %d\n", request->value.transfer.amount, request->value.transfer.account_id);
+    request->length = sizeof(req_transfer_t) + sizeof(req_header_t);
+  }else{
+    request->length = sizeof(req_header_t);
   }
+  
 
-  request->length = sizeof(request->value);
   request->value.header.pid = getpid();
 }
 
