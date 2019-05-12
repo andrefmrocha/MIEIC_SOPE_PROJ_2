@@ -6,16 +6,19 @@
 #include <unistd.h>
 #include "cli.h"
 #include "constants.h"
+#include "log.h"
+#include "sope.h"
 #include "types.h"
 
 int main(int argc, char *argv[]) {
   if (argc != 6) {
     printf("Usage: user num_acc password delay_ms operation arguments");
   }
+  open_user_log();
   tlv_request_t request;
   user_cli(&request, argv);
-  sem_t * sem = sem_open(SERVER_SEMAPHORE, 0, 0600);
-  if(sem == SEM_FAILED){
+  sem_t *sem = sem_open(SERVER_SEMAPHORE, 0, 0600);
+  if (sem == SEM_FAILED) {
     printf("Failed to open server semaphore!\n");
     exit(1);
   }
@@ -25,13 +28,12 @@ int main(int argc, char *argv[]) {
   sprintf(pid, "%u", getpid());
   strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
   strcat(answer_fifo, pid);
-  printf("Answer fifo: %s\n", answer_fifo);
   mkfifo(answer_fifo, 0660);
-  
+
   int value;
   sem_getvalue(sem, &value);
-  printf("Semaphore value : %d\n", value);
   sem_wait(sem);
+  logRequest(get_user_fd(), getpid(), &request);
   int fd_server = open(SERVER_FIFO_PATH, O_RDWR);
   write(fd_server, &request.type, sizeof(op_type_t));
   write(fd_server, &request.length, sizeof(request.length));
@@ -43,15 +45,6 @@ int main(int argc, char *argv[]) {
   read(fd_answer, &reply.type, sizeof(reply.type));
   read(fd_answer, &reply.length, sizeof(reply.length));
   read(fd_answer, &reply.value, reply.length);
-  printf("Received answer code %d, from account id %d\n", reply.value.header.ret_code, reply.value.header.account_id);
-  if (reply.type == OP_BALANCE) {
-    printf("Current balance: %u\n", reply.value.balance.balance);
-  }
-  if (reply.type == OP_TRANSFER) {
-    printf("Current balance: %u\n", reply.value.transfer.balance);
-  }
-  if (reply.type == OP_SHUTDOWN) {
-    printf("Shutted down with %d active offices\n", reply.value.shutdown.active_offices);
-  }
+  logReply(get_user_fd(), getpid(), &reply);
   return 0;
 }

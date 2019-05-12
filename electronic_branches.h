@@ -3,10 +3,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "hash.h"
+#include "log.h"
 #include "semaphore.h"
+#include "sope.h"
 #include "sync.h"
 #include "types.h"
-#include "sope.h"
 
 void *consumer(void *args);
 

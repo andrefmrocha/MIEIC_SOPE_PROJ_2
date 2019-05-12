@@ -6,10 +6,11 @@
 #include <unistd.h>
 #include "cli.h"
 #include "constants.h"
+#include "log.h"
 #include "producer.h"
 #include "semaphore.h"
-#include "types.h"
 #include "sope.h"
+#include "types.h"
 
 int main(int argc, char *argv[]) {
 
@@ -19,6 +20,7 @@ int main(int argc, char *argv[]) {
   }
 
   server_cli(argv);
+  open_server_log();
   int fd1;
   mkfifo(SERVER_FIFO_PATH, 0660);
 
@@ -30,15 +32,15 @@ int main(int argc, char *argv[]) {
     }
     tlv_request_t *request = malloc(sizeof(tlv_request_t));
 
-    if(read_request(request, fd1)){
+    if (read_request(request, fd1)) {
       printf("EOF, continuining...\n");
       free(request);
       continue;
     }
-    
-    logRequest(STDOUT_FILENO, MAIN_THREAD_ID, request);
-    if(request->type == OP_SHUTDOWN){
-      if(initialize_shutdown(request, MAIN_THREAD_ID) == 0){
+
+    logRequest(get_server_fd(), MAIN_THREAD_ID, request);
+    if (request->type == OP_SHUTDOWN) {
+      if (initialize_shutdown(request, MAIN_THREAD_ID) == 0) {
         fchmod(fd1, S_IRUSR | S_IRGRP | S_IROTH);
         break;
       }

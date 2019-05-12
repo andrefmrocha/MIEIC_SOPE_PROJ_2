@@ -80,10 +80,10 @@ void user_cli(tlv_request_t *request, char *argv[]) {
 
     printf("Transfering %d to account %d\n", request->value.transfer.amount, request->value.transfer.account_id);
     request->length = sizeof(req_transfer_t) + sizeof(req_header_t);
-  }else{
+  }
+  else {
     request->length = sizeof(req_header_t);
   }
-  
 
   request->value.header.pid = getpid();
 }

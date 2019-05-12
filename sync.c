@@ -3,7 +3,7 @@
 static tlv_request_t *data[MAX_DATA] = {NULL};
 static pthread_mutex_t data_mut = PTHREAD_MUTEX_INITIALIZER;
 static int num_threads;
-static int * offices_id;
+static int *offices_id;
 sem_t empty,
   full;
 
@@ -18,9 +18,9 @@ void initialize_sync(int max_threads) {
     pthread_create(&tid, NULL, consumer, &i);
   }
 
-  sem_t* sem = sem_open(SERVER_SEMAPHORE, O_CREAT, 0600, 1);
+  sem_t *sem = sem_open(SERVER_SEMAPHORE, O_CREAT, 0600, 1);
 
-  if(sem == SEM_FAILED){
+  if (sem == SEM_FAILED) {
     printf("Failed to open server semaphore!\n");
     exit(1);
   }
@@ -28,7 +28,7 @@ void initialize_sync(int max_threads) {
 
 tlv_request_t *retrieve_data(int thread_id) {
   tlv_request_t *saving_data = NULL;
-  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
+  logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
   pthread_mutex_lock(&data_mut);
   for (int i = 0; i < MAX_DATA; i++) {
     if (data[i] != NULL) {
@@ -38,12 +38,12 @@ tlv_request_t *retrieve_data(int thread_id) {
     }
   }
   pthread_mutex_unlock(&data_mut);
-  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, saving_data->value.header.pid);
+  logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, saving_data->value.header.pid);
   return saving_data;
 }
 
 void push_data(tlv_request_t *pushing_data, int thread_id) {
-  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
+  logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
   pthread_mutex_lock(&data_mut);
   for (int i = 0; i < MAX_DATA; i++) {
     if (data[i] == NULL) {
@@ -52,15 +52,15 @@ void push_data(tlv_request_t *pushing_data, int thread_id) {
     }
   }
   pthread_mutex_unlock(&data_mut);
-  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
+  logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
 }
 
 int stop_sync(tlv_request_t *request, int thread_id) {
   int full_num, sem_value;
   sem_getvalue(&full, &full_num);
-  for(int i = 0; i < num_threads; i++){
+  for (int i = 0; i < num_threads; i++) {
     sem_getvalue(&full, &sem_value);
-    logSyncMechSem(STDOUT_FILENO, thread_id, SYNC_OP_SEM_POST, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
+    logSyncMechSem(get_server_fd(), thread_id, SYNC_OP_SEM_POST, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
     sem_post(&full);
   }
   return full_num;
