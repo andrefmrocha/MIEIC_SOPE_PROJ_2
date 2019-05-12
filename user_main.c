@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
   strcat(answer_fifo, pid);
   mkfifo(answer_fifo, 0660);
 
-  // sem_wait(sem);
+  sem_wait(sem);
   tlv_reply_t reply;
   fill_reply(&request, &reply);
   reply.value.header.ret_code = RC_SRV_TIMEOUT;
