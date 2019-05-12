@@ -8,6 +8,7 @@
 #include "sope.h"
 #include "sync.h"
 #include "types.h"
+#include "utils.h"
 
 void *consumer(void *args);
 

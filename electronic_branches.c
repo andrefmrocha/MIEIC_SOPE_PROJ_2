@@ -119,9 +119,9 @@ void answer_user(pid_t user_pid, tlv_reply_t *reply, int thread_id) {
   strcat(answer_fifo, pid);
   logReply(get_server_fd(), thread_id, reply);
   logReply(STDOUT_FILENO, thread_id, reply);
-  int fd = open(answer_fifo, O_WRONLY);
+  int fd = open_fifo(answer_fifo, O_WRONLY);
   if (fd == -1) {
-    perror("Failed to open answer fifo!\n");
+    printf("USR Down!\n");
     return;
   }
   if (write(fd, &reply->type, sizeof(reply->type)) == -1) {

@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
   int value;
   sem_getvalue(sem, &value);
   sem_wait(sem);
-  int fd_server = open(SERVER_FIFO_PATH, O_RDWR);
-  if (open_fifo(SERVER_FIFO_PATH, O_WRONLY) == -1) {
+  int fd_server = open_fifo(SERVER_FIFO_PATH, O_WRONLY);
+  if (fd_server == -1) {
     printf("Server down!\n");
   }
   logRequest(get_user_fd(), getpid(), &request);
