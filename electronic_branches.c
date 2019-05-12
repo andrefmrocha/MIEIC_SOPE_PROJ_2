@@ -133,8 +133,6 @@ void answer_user(pid_t user_pid, tlv_reply_t *reply, int thread_id) {
   if (write(fd, &reply->value, reply->length) == -1) {
     printf("Failed to write message\n");
   }
-  // write(fd, &reply->length, sizeof(reply->length));
-  // write(fd, &reply->value, reply->length);
 }
 
 void save_account(req_create_account_t *account_info, int thread_id) {
