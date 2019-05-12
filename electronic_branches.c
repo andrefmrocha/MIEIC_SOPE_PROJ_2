@@ -119,9 +119,12 @@ void answer_user(pid_t user_pid, tlv_reply_t *reply, int thread_id) {
   strcat(answer_fifo, pid);
   logReply(get_server_fd(), thread_id, reply);
   logReply(STDOUT_FILENO, thread_id, reply);
-  int fd = open_fifo(answer_fifo, O_WRONLY);
+  tlv_reply_t fail_reply = * reply;
+  fail_reply.value.header.ret_code = RC_USR_DOWN;
+  int fd = open_fifo(answer_fifo, O_WRONLY, &fail_reply, get_server_fd());
   if (fd == -1) {
     printf("USR Down!\n");
+    logReply(get_server_fd(), thread_id, &fail_reply);
     return;
   }
   if (write(fd, &reply->type, sizeof(reply->type)) == -1) {
@@ -186,11 +189,11 @@ void check_balance(tlv_request_t *value, int thread_id) {
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
   pthread_mutex_lock(&mutex);
-  if (accounts[value->value.header.account_id] == NULL) {
-    code = RC_ID_NOT_FOUND;
-  }
-  else if (value->value.header.account_id == ADMIN_ACCOUNT_ID) {
+  if (value->value.header.account_id == ADMIN_ACCOUNT_ID) {
     code = RC_OP_NALLOW;
+  }
+  else if (accounts[value->value.header.account_id] == NULL) {
+    code = RC_ID_NOT_FOUND;
   }
   else {
     code = RC_OK;

@@ -19,6 +19,9 @@ void initialize_sync(int max_threads) {
   }
 
   sem_t *sem = sem_open(SERVER_SEMAPHORE, O_CREAT, 0600, 1);
+  int value;
+  sem_getvalue(sem, &value);
+  printf("Semaphore %d\n", value);
 
   if (sem == SEM_FAILED) {
     printf("Failed to open server semaphore!\n");

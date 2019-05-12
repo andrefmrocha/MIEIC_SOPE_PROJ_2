@@ -22,11 +22,7 @@ int main(int argc, char *argv[]) {
   server_cli(argv);
   open_server_log();
   int fd1;
-
-  if (mkfifo(SERVER_FIFO_PATH, 0660) == -1) {
-    perror("Fifo timeout!");
-    exit(1);
-  }
+  mkfifo(SERVER_FIFO_PATH, 0660);
 
   while (1) {
     fd1 = open(SERVER_FIFO_PATH, O_RDONLY);
@@ -55,5 +51,6 @@ int main(int argc, char *argv[]) {
   }
 
   unlink(SERVER_FIFO_PATH);
+  unlink(SERVER_SEMAPHORE);
   pthread_exit(0);
 }

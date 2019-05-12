@@ -31,12 +31,15 @@ int main(int argc, char *argv[]) {
   strcat(answer_fifo, pid);
   mkfifo(answer_fifo, 0660);
 
-  int value;
-  sem_getvalue(sem, &value);
-  sem_wait(sem);
-  int fd_server = open_fifo(SERVER_FIFO_PATH, O_WRONLY);
+  // sem_wait(sem);
+  tlv_reply_t reply;
+  fill_reply(&request, &reply);
+  reply.value.header.ret_code = RC_SRV_TIMEOUT;
+  int fd_server = open_fifo(SERVER_FIFO_PATH, O_WRONLY, &reply, get_user_fd());
   if (fd_server == -1) {
     printf("Server down!\n");
+    reply.value.header.ret_code = RC_SRV_DOWN;
+    logReply(get_user_fd(), getpid(), &reply);
   }
   logRequest(get_user_fd(), getpid(), &request);
   logRequest(STDOUT_FILENO, getpid(), &request);
@@ -45,12 +48,10 @@ int main(int argc, char *argv[]) {
   write(fd_server, &request.value, sizeof(request.value));
   close(fd_server);
   sem_post(sem);
-  tlv_reply_t reply;
   int fd_answer = open(answer_fifo, O_RDONLY);
-  if (open_fifo(answer_fifo, O_RDONLY) == -1) {
-    reply.value.header.ret_code = RC_USR_DOWN;
-    logReply(get_user_fd(), getpid(), &reply);
-    logReply(STDOUT_FILENO, getpid(), &reply);
+  if (open_fifo(answer_fifo, O_RDONLY, &reply, get_user_fd()) == -1) {
+    printf("Failed to open answer fifo!\n");
+    exit(1);
   }
   read(fd_answer, &reply.type, sizeof(reply.type));
   read(fd_answer, &reply.length, sizeof(reply.length));
