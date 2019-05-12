@@ -29,6 +29,7 @@ void initialize_sync(int max_threads) {
 tlv_request_t *retrieve_data(int thread_id) {
   tlv_request_t *saving_data = NULL;
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
   pthread_mutex_lock(&data_mut);
   for (int i = 0; i < MAX_DATA; i++) {
     if (data[i] != NULL) {
@@ -39,11 +40,13 @@ tlv_request_t *retrieve_data(int thread_id) {
   }
   pthread_mutex_unlock(&data_mut);
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, saving_data->value.header.pid);
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, saving_data->value.header.pid);
   return saving_data;
 }
 
 void push_data(tlv_request_t *pushing_data, int thread_id) {
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
   pthread_mutex_lock(&data_mut);
   for (int i = 0; i < MAX_DATA; i++) {
     if (data[i] == NULL) {
@@ -53,6 +56,7 @@ void push_data(tlv_request_t *pushing_data, int thread_id) {
   }
   pthread_mutex_unlock(&data_mut);
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
 }
 
 int stop_sync(tlv_request_t *request, int thread_id) {
@@ -61,6 +65,7 @@ int stop_sync(tlv_request_t *request, int thread_id) {
   for (int i = 0; i < num_threads; i++) {
     sem_getvalue(&full, &sem_value);
     logSyncMechSem(get_server_fd(), thread_id, SYNC_OP_SEM_POST, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
+    logSyncMechSem(STDOUT_FILENO, thread_id, SYNC_OP_SEM_POST, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
     sem_post(&full);
   }
   return full_num;

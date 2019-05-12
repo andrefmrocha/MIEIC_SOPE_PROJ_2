@@ -5,11 +5,13 @@ void produce_data(tlv_request_t *request) {
   int sem_value;
   sem_getvalue(&empty, &sem_value);
   logSyncMechSem(get_server_fd(), MAIN_THREAD_ID, SYNC_OP_SEM_WAIT, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
+  logSyncMechSem(STDOUT_FILENO, MAIN_THREAD_ID, SYNC_OP_SEM_WAIT, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
   sem_wait(&empty);
   push_data(request, MAIN_THREAD_ID);
   sem_post(&full);
   sem_getvalue(&empty, &sem_value);
   logSyncMechSem(get_server_fd(), MAIN_THREAD_ID, SYNC_OP_SEM_POST, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
+  logSyncMechSem(STDOUT_FILENO, MAIN_THREAD_ID, SYNC_OP_SEM_POST, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
 }
 
 int initialize_shutdown(tlv_request_t *request, int thread_id) {
@@ -20,6 +22,7 @@ int initialize_shutdown(tlv_request_t *request, int thread_id) {
 
   if (request->value.header.account_id == ADMIN_ACCOUNT_ID) {
     logDelay(get_server_fd(), MAIN_THREAD_ID, request->value.header.op_delay_ms);
+    logDelay(STDOUT_FILENO, MAIN_THREAD_ID, request->value.header.op_delay_ms);
     usleep(request->value.header.op_delay_ms);
     int active_threads = stop_sync(request, MAIN_THREAD_ID);
     reply.value.header.ret_code = RC_OK;

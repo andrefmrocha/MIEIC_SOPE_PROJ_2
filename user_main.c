@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
   sem_getvalue(sem, &value);
   sem_wait(sem);
   logRequest(get_user_fd(), getpid(), &request);
+  logRequest(STDOUT_FILENO, getpid(), &request);
   int fd_server = open(SERVER_FIFO_PATH, O_RDWR);
   write(fd_server, &request.type, sizeof(op_type_t));
   write(fd_server, &request.length, sizeof(request.length));
@@ -46,5 +47,6 @@ int main(int argc, char *argv[]) {
   read(fd_answer, &reply.length, sizeof(reply.length));
   read(fd_answer, &reply.value, reply.length);
   logReply(get_user_fd(), getpid(), &reply);
+  logReply(STDOUT_FILENO, getpid(), &reply);
   return 0;
 }

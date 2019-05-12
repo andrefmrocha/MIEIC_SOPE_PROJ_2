@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
     }
 
     logRequest(get_server_fd(), MAIN_THREAD_ID, request);
+    logRequest(STDOUT_FILENO, MAIN_THREAD_ID, request);
     if (request->type == OP_SHUTDOWN) {
       if (initialize_shutdown(request, MAIN_THREAD_ID) == 0) {
         fchmod(fd1, S_IRUSR | S_IRGRP | S_IROTH);

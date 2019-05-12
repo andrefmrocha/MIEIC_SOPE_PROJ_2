@@ -7,7 +7,6 @@ void generate_salt(char *salt) {
     sprintf(salt + n, "%x", rand() % 0xff);
   }
   salt[SALT_LEN - 1] = '\0';
-  // printf("Salt: %s\n", salt);
 }
 
 void generate_hash(char *salt, char *password, char *hash) {
