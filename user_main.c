@@ -9,6 +9,7 @@
 #include "log.h"
 #include "sope.h"
 #include "types.h"
+#include "utils.h"
 
 int main(int argc, char *argv[]) {
   if (argc != 6) {
@@ -33,20 +34,29 @@ int main(int argc, char *argv[]) {
   int value;
   sem_getvalue(sem, &value);
   sem_wait(sem);
+  int fd_server = open(SERVER_FIFO_PATH, O_RDWR);
+  if (open_fifo(SERVER_FIFO_PATH, O_WRONLY) == -1) {
+    printf("Server down!\n");
+  }
   logRequest(get_user_fd(), getpid(), &request);
   logRequest(STDOUT_FILENO, getpid(), &request);
-  int fd_server = open(SERVER_FIFO_PATH, O_RDWR);
   write(fd_server, &request.type, sizeof(op_type_t));
   write(fd_server, &request.length, sizeof(request.length));
   write(fd_server, &request.value, sizeof(request.value));
   close(fd_server);
   sem_post(sem);
-  int fd_answer = open(answer_fifo, O_RDONLY);
   tlv_reply_t reply;
+  int fd_answer = open(answer_fifo, O_RDONLY);
+  if (open_fifo(answer_fifo, O_RDONLY) == -1) {
+    reply.value.header.ret_code = RC_USR_DOWN;
+    logReply(get_user_fd(), getpid(), &reply);
+    logReply(STDOUT_FILENO, getpid(), &reply);
+  }
   read(fd_answer, &reply.type, sizeof(reply.type));
   read(fd_answer, &reply.length, sizeof(reply.length));
   read(fd_answer, &reply.value, reply.length);
   logReply(get_user_fd(), getpid(), &reply);
   logReply(STDOUT_FILENO, getpid(), &reply);
+  unlink(answer_fifo);
   return 0;
 }

@@ -2,8 +2,8 @@ C = gcc
 CFLAGS = -Wall -Werror -Wextra
 LBLIBS = -pthread -lrt
 
-SRC_USER = user_main.c cli.c electronic_branches.c sync.c hash.c log.c loggers.c
-SRC_SERVER = server_main.c electronic_branches.c sync.c producer.c hash.c cli.c log.c loggers.c
+SRC_USER = user_main.c cli.c electronic_branches.c sync.c hash.c log.c loggers.c utils.c
+SRC_SERVER = server_main.c electronic_branches.c sync.c producer.c hash.c cli.c log.c loggers.c utils.c
 OBJ_USER = $(SRC_USER:.c=.o)
 OBJ_SERVER = $(SRC_SERVER:.c=.o)
 EXEC1 = server
