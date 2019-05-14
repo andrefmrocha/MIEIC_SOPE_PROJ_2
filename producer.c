@@ -37,15 +37,19 @@ int initialize_shutdown(tlv_request_t *request, int thread_id) {
 }
 
 int read_request(tlv_request_t *request, int fd1) {
-  if (read(fd1, &request->type, sizeof(request->type)) == 0) {
+  change_alarm_signal(sigalarm_handler_server);
+  if (read(fd1, &request->type, sizeof(request->type)) <= 0) {
     return -1;
   }
-  if (read(fd1, &request->length, sizeof(request->length)) == 0) {
+  if (read(fd1, &request->length, sizeof(request->length)) <= 0) {
     return -1;
   }
-  if (read(fd1, &request->value, request->length) == 0) {
+  if (read(fd1, &request->value, request->length) <= 0) {
     return -1;
   }
-
+  printf("Request of type %d and length %u\n", request->type, request->length);
+  if (request->length > sizeof(tlv_request_t))
+    return -1;
   return 0;
 }
+

@@ -6,10 +6,22 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "types.h"
-#include "sope.h"
 #include "log.h"
+#include "sope.h"
+#include "types.h"
 
-int open_fifo(char *fifo_name, int flags, tlv_reply_t * reply, int fd);
+int open_fifo(char *fifo_name, int flags);
 
-void fill_reply(tlv_request_t * request, tlv_reply_t * reply);
+void fill_reply(tlv_request_t *request, tlv_reply_t *reply);
+
+void close_server_files();
+
+void change_alarm_signal(void (*func)(int));
+
+void conclude_read();
+
+void sigalarm_handler_server(int signo);
+
+void sigalarm_handler_user(int signo);
+
+

@@ -22,8 +22,9 @@ int main(int argc, char *argv[]) {
   server_cli(argv);
   open_server_log();
   int fd1;
+  atexit(close_server_files);
   mkfifo(SERVER_FIFO_PATH, 0660);
-
+  next_request();
   while (1) {
     fd1 = open(SERVER_FIFO_PATH, O_RDONLY);
     if (fd1 < 0) {
@@ -31,13 +32,14 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     tlv_request_t *request = malloc(sizeof(tlv_request_t));
-
-    if (read_request(request, fd1)) {
+    printf("REQUEST RECEIVED\n");
+    if (read_request(request, fd1) == -1) {
       printf("EOF, continuining...\n");
       free(request);
+      conclude_read();
       continue;
     }
-
+    conclude_read();
     logRequest(get_server_fd(), MAIN_THREAD_ID, request);
     logRequest(STDOUT_FILENO, MAIN_THREAD_ID, request);
     if (request->type == OP_SHUTDOWN) {
@@ -48,9 +50,9 @@ int main(int argc, char *argv[]) {
     }
     produce_data(request);
     close(fd1);
+    next_request();
   }
 
-  unlink(SERVER_FIFO_PATH);
-  unlink(SERVER_SEMAPHORE);
+
   pthread_exit(0);
 }

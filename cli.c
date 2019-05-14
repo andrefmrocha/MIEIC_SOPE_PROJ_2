@@ -84,7 +84,6 @@ void user_cli(tlv_request_t *request, char *argv[]) {
   else {
     request->length = sizeof(req_header_t);
   }
-
   request->value.header.pid = getpid();
 }
 

@@ -4,6 +4,7 @@ static tlv_request_t *data[MAX_DATA] = {NULL};
 static pthread_mutex_t data_mut = PTHREAD_MUTEX_INITIALIZER;
 static int num_threads;
 static int *offices_id;
+static sem_t * sem;
 sem_t empty,
   full;
 
@@ -18,7 +19,7 @@ void initialize_sync(int max_threads) {
     pthread_create(&tid, NULL, consumer, &i);
   }
 
-  sem_t *sem = sem_open(SERVER_SEMAPHORE, O_CREAT, 0600, 1);
+  sem = sem_open(SERVER_SEMAPHORE, O_CREAT, 0600, 0);
   int value;
   sem_getvalue(sem, &value);
   printf("Semaphore %d\n", value);
@@ -72,4 +73,8 @@ int stop_sync(tlv_request_t *request, int thread_id) {
     sem_post(&full);
   }
   return full_num;
+}
+
+void next_request(){
+  sem_post(sem);
 }
