@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
       printf("EOF, continuining...\n");
       free(request);
       close(fd1);
+      next_request();
       continue;
     }
     logRequest(get_server_fd(), MAIN_THREAD_ID, request);
