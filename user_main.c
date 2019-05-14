@@ -41,12 +41,12 @@ int main(int argc, char *argv[]) {
   }
   logRequest(get_user_fd(), getpid(), &request);
   logRequest(STDOUT_FILENO, getpid(), &request);
-  change_alarm_signal(sigalarm_handler_user);
   write(fd_server, &request.type, sizeof(op_type_t));
   write(fd_server, &request.length, sizeof(request.length));
   write(fd_server, &request.value, sizeof(request.value));
-  conclude_read();
   close(fd_server);
+  fill_reply(&request, &reply); 
+  change_alarm_signal(sigalarm_handler_user, &reply);
   int fd_answer = open(answer_fifo, O_RDONLY);
   if (fd_answer == -1) {
     printf("Failed to open answer fifo!\n");
@@ -55,6 +55,7 @@ int main(int argc, char *argv[]) {
   read(fd_answer, &reply.type, sizeof(reply.type));
   read(fd_answer, &reply.length, sizeof(reply.length));
   read(fd_answer, &reply.value, reply.length);
+  conclude_read();
   logReply(get_user_fd(), getpid(), &reply);
   logReply(STDOUT_FILENO, getpid(), &reply);
   unlink(answer_fifo);

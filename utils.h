@@ -16,7 +16,7 @@ void fill_reply(tlv_request_t *request, tlv_reply_t *reply);
 
 void close_server_files();
 
-void change_alarm_signal(void (*func)(int));
+void change_alarm_signal(void (*func)(int), tlv_reply_t *reply);
 
 void conclude_read();
 

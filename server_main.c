@@ -36,10 +36,9 @@ int main(int argc, char *argv[]) {
     if (read_request(request, fd1) == -1) {
       printf("EOF, continuining...\n");
       free(request);
-      conclude_read();
+      close(fd1);
       continue;
     }
-    conclude_read();
     logRequest(get_server_fd(), MAIN_THREAD_ID, request);
     logRequest(STDOUT_FILENO, MAIN_THREAD_ID, request);
     if (request->type == OP_SHUTDOWN) {

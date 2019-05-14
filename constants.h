@@ -52,3 +52,6 @@
 
 // Server CLI Constants
 #define NUM_THRS 3
+
+#define READ    0
+#define WRITE   1

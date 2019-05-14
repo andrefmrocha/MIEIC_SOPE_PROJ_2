@@ -49,21 +49,17 @@ void process_data(tlv_request_t *value, int thread_id) {
     switch (value->type) {
       case OP_CREATE_ACCOUNT:
         create_account(value, thread_id);
-        sleep(20);
         break;
 
       case OP_BALANCE:
         check_balance(value, thread_id);
-        sleep(20);
         break;
 
       case OP_TRANSFER:
         transfer(value, thread_id);
-        sleep(20);
         break;
 
       case OP_SHUTDOWN:
-        sleep(20);
         break;
 
       default:
@@ -120,6 +116,7 @@ void answer_user(pid_t user_pid, tlv_reply_t *reply, int thread_id) {
   if (fd < 0) {
     printf("USR Down!\n");
     logReply(get_server_fd(), thread_id, &fail_reply);
+    logReply(STDOUT_FILENO, thread_id, &fail_reply);
     return;
   }
   if (write(fd, &reply->type, sizeof(reply->type)) == -1) {
@@ -141,7 +138,7 @@ void save_account(req_create_account_t *account_info, int thread_id) {
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, account_info->account_id);
   pthread_mutex_lock(account_mutexes[account_info->account_id]);
   char salt[SALT_LEN];
-  char hash[HASH_LEN];
+  char hash[HASH_LEN + 1];
   generate_salt(salt);
   generate_hash(salt, account_info->password, hash);
   accounts[account_info->account_id] = malloc(sizeof(bank_account_t));
