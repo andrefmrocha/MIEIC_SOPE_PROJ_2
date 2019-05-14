@@ -23,9 +23,9 @@ int open_fifo(char *fifo_name, int flags, tlv_reply_t * reply, int logfile) {
   fd_log = logfile;
   received_reply = reply;  
   change_alarm_signal(sigalarm_handler);
-  alarm(FIFO_TIMEOUT_SECS);
+  alarm(3);
   int fd = open(fifo_name, flags, 0660);
-  change_alarm_signal(SIG_DFL);
+  change_alarm_signal(SIG_IGN);
   if (fd < 0) {
     perror("Failed to open fifo");
     return -1;
