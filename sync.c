@@ -1,13 +1,18 @@
 #include "sync.h"
+#include "queue.h"
 
-static tlv_request_t *data[MAX_DATA] = {NULL};
+//static tlv_request_t *data[MAX_DATA] = {NULL};
 static pthread_mutex_t data_mut = PTHREAD_MUTEX_INITIALIZER;
 static int num_threads;
 static int *offices_id;
 sem_t empty,
   full;
 
+
+queue_t *data = NULL;
+ 
 void initialize_sync(int max_threads) {
+  data = new_queue(MAX_DATA, sizeof(tlv_request_t));
   num_threads = max_threads;
   sem_init(&empty, 0, max_threads);
   sem_init(&full, 0, 0);
@@ -34,13 +39,16 @@ tlv_request_t *retrieve_data(int thread_id) {
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
   pthread_mutex_lock(&data_mut);
+
+  get_queue(data, saving_data);
+/*
   for (int i = 0; i < MAX_DATA; i++) {
     if (data[i] != NULL) {
       saving_data = data[i];
       data[i] = NULL;
       break;
     }
-  }
+  }*/
   pthread_mutex_unlock(&data_mut);
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, saving_data->value.header.pid);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, saving_data->value.header.pid);
@@ -51,12 +59,15 @@ void push_data(tlv_request_t *pushing_data, int thread_id) {
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
   pthread_mutex_lock(&data_mut);
+  
+  put_queue(data, pushing_data);
+/*
   for (int i = 0; i < MAX_DATA; i++) {
     if (data[i] == NULL) {
       data[i] = pushing_data;
       break;
     }
-  }
+  }*/
   pthread_mutex_unlock(&data_mut);
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);

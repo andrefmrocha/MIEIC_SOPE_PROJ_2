@@ -1,76 +1,56 @@
 #include "queue.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
-typedef struct {
-  int *buf;    // pointer to array that stores queue elements
-  int in, out; // indices of the array pointed by buf to insert/remove elements
-  int size;    // size of the array
-  int count;   // number of elements in queue
-} queue_t;
+struct queue {
+    void*buf;         // void*instead of int*
+    int in, out;
+    int size, count;
+    int el_size;       // for pointer arithmetic
+};
 
-queue_t *new_queue(unsigned int in_size) {
-  // allocate queue object
-  queue_t *q = malloc(sizeof(*q));
-
-  if (q == NULL) {
-    return NULL;
-  }
-  // allocate space to store queue elements
-  q->size = in_size ? in_size : 1;
-  q->buf = malloc(q->size * sizeof(int));
-  if (q->buf == NULL) {
+queue_t* new_queue(unsigned int n_el, int el_size) {
+    queue_t*q = malloc(sizeof(queue_t));
+    if( q == NULL )return q;// The user must provide the size of each queue element
+    q->size = n_el ? n_el : 1;
+    q->buf = malloc(q->size*el_size);
+    if( q->buf == NULL ) {free(q);
+        return NULL;
+    }
+    q->in = q->out = q->count = 0;
+    q->el_size = el_size;
+    return q;
+}
+void delete_queue(queue_t*q) {
+    free(q->buf);
     free(q);
-    return NULL;
-  }
-  // initialize state of queue
-  q->in = q->out = q->count = 0;
-
-  return q;
 }
 
-void delete_queue(queue_t *q) {
-  free(q->buf);
-  free(q);
+int is_empty_queue(queue_t*q) {
+    return q->count == 0;
 }
 
-int put_queue(queue_t *q, int n) {
-  if (q->count == q->size)
-    if (resize_queue(q)) // private function
+int is_full_queue(queue_t*q) {
+    return q->count == q->size;
+}
+
+int get_queue(queue_t*q, void*el) {
+    if( is_empty_queue(q) )
       return -1;
-  q->buf[q->in++] = n;
-  q->count++;
-  adjust_queue(q); // private function
-  return 0;
-}
-
-int get_queue(queue_t *q, int *n) {
-  if (q->count != 0) {
-    *n = q->buf[q->out++];
-    q->count--;
-    adjust_queue(q);
+      
+    memcpy(el, q->buf + q->out*q->el_size, q->el_size);
+    q->out = (q->out + 1) % q->size;q->count--;
     return 0;
-  }
-  return -1;
 }
 
-//======= private: can be invoked only in queue.c =========
-
-static void adjust_queue(queue_t *q) {
-  q->in %= q->size;
-  q->out %= q->size;
-}
-
-static int resize_queue(queue_t *q) {
-  int *p = (int *) realloc(q->buf, 2 * (q->size) * sizeof(int));
-  int i;
-  if (p == NULL)
-    return -1;
-
-  q->buf = p;
-
-  for (i = 0; i < q->in; i++)
-    q->buf[q->size + i] = q->buf[i];
-
-  q->in += q->size;
-  q->size *= 2;
-  return 0;
+int put_queue(queue_t*q, void*el) {
+    if( is_full_queue(q) )
+      return -1;
+    // memcpy(dst, src, n_bytes): memory copy
+    // must do pointer arithmetic explicitly
+    memcpy(q->buf + q->in*q->el_size, el, q->el_size);
+    q->in = (q->in + 1) % q->size;
+    q->count++;
+    return 0;
 }
