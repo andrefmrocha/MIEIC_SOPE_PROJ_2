@@ -1,6 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "constants.h"
 #include "stdlib.h"
 #include "time.h"

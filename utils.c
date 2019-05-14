@@ -1,7 +1,7 @@
 #include "utils.h"
-static tlv_reply_t * received_reply;
+static tlv_reply_t *received_reply;
 static int fd_log;
-void sigalarm_handler(int signo) {
+void sigalarm_handler_user(int signo) {
   if (signo == SIGALRM) {
     logReply(fd_log, getpid(), received_reply);
     logReply(STDOUT_FILENO, getpid(), received_reply);
@@ -9,7 +9,15 @@ void sigalarm_handler(int signo) {
   }
 }
 
-void change_alarm_signal(void (*func)(int)) {
+void sigalarm_handler_server(int signo) {
+  if (signo == SIGALRM) {
+    logReply(fd_log, MAIN_THREAD_ID, received_reply);
+    logReply(STDOUT_FILENO, MAIN_THREAD_ID, received_reply);
+    exit(1);
+  }
+}
+
+void sigaction_execute(void (*func)(int)) {
   struct sigaction action;
   action.sa_flags = 0;
   action.sa_handler = func;
@@ -19,25 +27,19 @@ void change_alarm_signal(void (*func)(int)) {
   }
 }
 
-int open_fifo(char *fifo_name, int flags, tlv_reply_t * reply, int logfile) {
-  fd_log = logfile;
-  received_reply = reply;  
-  change_alarm_signal(sigalarm_handler);
-  alarm(3);
-  int fd = open(fifo_name, flags, 0660);
-  change_alarm_signal(SIG_IGN);
-  if (fd < 0) {
-    perror("Failed to open fifo");
-    return -1;
-  }
-
-  return fd;
+void change_alarm_signal(void (*func)(int), tlv_reply_t *reply) {
+  received_reply = reply;
+  sigaction_execute(func);
+  alarm(2);
 }
 
-void fill_reply(tlv_request_t *request, tlv_reply_t *reply){
+void conclude_read() {
+  sigaction_execute(SIG_IGN);
+}
+
+void fill_reply(tlv_request_t *request, tlv_reply_t *reply) {
   reply->type = request->type;
   reply->value.header.account_id = request->value.header.account_id;
-  reply->value.header.ret_code = RC_SRV_DOWN;
   if (reply->type == OP_BALANCE) {
     reply->length = sizeof(rep_header_t) + sizeof(rep_balance_t);
   }
@@ -50,4 +52,9 @@ void fill_reply(tlv_request_t *request, tlv_reply_t *reply){
   else {
     reply->length = sizeof(rep_header_t);
   }
+}
+
+void close_server_files() {
+  unlink(SERVER_FIFO_PATH);
+  unlink(SERVER_SEMAPHORE);
 }
