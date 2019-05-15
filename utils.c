@@ -30,7 +30,7 @@ void sigaction_execute(void (*func)(int)) {
 void change_alarm_signal(void (*func)(int), tlv_reply_t *reply) {
   received_reply = reply;
   sigaction_execute(func);
-  alarm(2);
+  alarm(FIFO_TIMEOUT_SECS);
 }
 
 void conclude_read() {

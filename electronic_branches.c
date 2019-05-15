@@ -24,6 +24,7 @@ void *consumer(void *args) {
       logSyncMechSem(get_server_fd(), id, SYNC_OP_SEM_WAIT, SYNC_ROLE_CONSUMER, 0, sem_value);
       logSyncMechSem(STDOUT_FILENO, id, SYNC_OP_SEM_WAIT, SYNC_ROLE_CONSUMER, 0, sem_value);
       sem_wait(&full);
+      printf("Getting data\n");
       value = retrieve_data(id);
       if (value == NULL)
         break;

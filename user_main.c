@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
   reply.value.header.ret_code = RC_SRV_TIMEOUT;
   int fd_server = open(SERVER_FIFO_PATH, O_WRONLY);
   if (fd_server == -1) {
-    printf("Server down!\n");
+    perror("Server down");
     reply.value.header.ret_code = RC_SRV_DOWN;
     logReply(get_user_fd(), getpid(), &reply);
   }

@@ -23,7 +23,11 @@ int main(int argc, char *argv[]) {
   open_server_log();
   int fd1;
   atexit(close_server_files);
-  mkfifo(SERVER_FIFO_PATH, 0660);
+  if (mkfifo(SERVER_FIFO_PATH, 0660) < 0){
+    perror("Fifo:");
+    fd1 = open(SERVER_FIFO_PATH, O_RDONLY);
+    fchmod(fd1, S_IRWXU | S_IRWXG | S_IRWXO);
+  }
   next_request();
   while (1) {
     fd1 = open(SERVER_FIFO_PATH, O_RDONLY);

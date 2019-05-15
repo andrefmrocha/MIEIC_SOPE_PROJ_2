@@ -9,11 +9,7 @@ static sem_t * sem;
 sem_t empty,
   full;
 
-
-queue_t *data = NULL;
- 
 void initialize_sync(int max_threads) {
-  data = new_queue(MAX_DATA, sizeof(tlv_request_t));
   num_threads = max_threads;
   sem_init(&empty, 0, max_threads);
   sem_init(&full, 0, 0);
@@ -40,8 +36,8 @@ tlv_request_t *retrieve_data(int thread_id) {
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
   pthread_mutex_lock(&data_mut);
-
-  get_queue(data, saving_data);
+  printf("Accesing queue\n");
+  saving_data = removeData();
 /*
   for (int i = 0; i < MAX_DATA; i++) {
     if (data[i] != NULL) {
@@ -60,9 +56,10 @@ void push_data(tlv_request_t *pushing_data, int thread_id) {
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, pushing_data->value.header.pid);
   pthread_mutex_lock(&data_mut);
-  
-  put_queue(data, pushing_data);
-/*
+
+  insert(pushing_data);
+
+    /*
   for (int i = 0; i < MAX_DATA; i++) {
     if (data[i] == NULL) {
       data[i] = pushing_data;
