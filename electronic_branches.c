@@ -24,7 +24,6 @@ void *consumer(void *args) {
       logSyncMechSem(get_server_fd(), id, SYNC_OP_SEM_WAIT, SYNC_ROLE_CONSUMER, 0, sem_value);
       logSyncMechSem(STDOUT_FILENO, id, SYNC_OP_SEM_WAIT, SYNC_ROLE_CONSUMER, 0, sem_value);
       sem_wait(&full);
-      printf("Getting data\n");
       value = retrieve_data(id);
       if (value == NULL)
         break;
@@ -70,7 +69,6 @@ void process_data(tlv_request_t *value, int thread_id) {
     }
   }
   else {
-    printf("Failed login!\n");
     tlv_reply_t reply;
     fill_reply(value, &reply);
     reply.value.header.ret_code = code;
@@ -106,7 +104,6 @@ void answer_user(pid_t user_pid, tlv_reply_t *reply, int thread_id) {
   char answer_fifo[USER_FIFO_PATH_LEN];
   char pid[WIDTH_ID + 1];
   sprintf(pid, "%u", user_pid);
-  printf("pid %u\nx", user_pid);
   strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
   strcat(answer_fifo, pid);
   logReply(get_server_fd(), thread_id, reply);
@@ -132,7 +129,6 @@ void answer_user(pid_t user_pid, tlv_reply_t *reply, int thread_id) {
 }
 
 void save_account(req_create_account_t *account_info, int thread_id) {
-  printf("CREATE ACCOUNT\n");
   account_mutexes[account_info->account_id] = malloc(sizeof(pthread_mutex_t));
   pthread_mutex_init(account_mutexes[account_info->account_id], NULL);
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, account_info->account_id);
