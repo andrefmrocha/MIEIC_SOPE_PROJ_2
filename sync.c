@@ -4,6 +4,7 @@
 static pthread_mutex_t data_mut = PTHREAD_MUTEX_INITIALIZER;
 static int num_threads;
 static int *offices_id;
+static pthread_t* tid;
 static sem_t *sem;
 sem_t empty,
   full;
@@ -13,10 +14,10 @@ void initialize_sync(int max_threads) {
   sem_init(&empty, 0, max_threads);
   sem_init(&full, 0, 0);
   offices_id = malloc(sizeof(int) * num_threads);
+  tid = malloc(sizeof(pthread_t) * num_threads);
   for (int i = 0; i < max_threads; i++) {
-    pthread_t tid;
     offices_id[i] = i + 1;
-    pthread_create(&tid, NULL, consumer, &offices_id[i]);
+    pthread_create(&tid[i], NULL, consumer, &offices_id[i]);
   }
 
   sem = sem_open(SERVER_SEMAPHORE, O_CREAT, 0600, 0);
@@ -67,12 +68,20 @@ int stop_sync(tlv_request_t *request, int thread_id) {
     logSyncMechSem(get_server_fd(), thread_id, SYNC_OP_SEM_POST, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
     sem_post(&full);
   }
+  for(int i = 0; i < num_threads; i++){
+    pthread_join(tid[i], NULL);
+  }
+  free_data();
+  free(offices_id);
+  free(tid);
+  sem_close(sem);
   return full_num;
 }
 
 void next_request() {
   int value;
   sem_getvalue(sem, &value);
+  printf("Value: %d\n", value);
   if(value == 0)
     sem_post(sem);
 }

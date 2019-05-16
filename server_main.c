@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     tlv_request_t *request = malloc(sizeof(tlv_request_t));
+    memset(request, 0, sizeof(tlv_request_t));
     if (read_request(request, fd1) == -1) {
       free(request);
       close(fd1);
@@ -46,6 +47,7 @@ int main(int argc, char *argv[]) {
     if (request->type == OP_SHUTDOWN) {
       if (initialize_shutdown(request, MAIN_THREAD_ID) == 0) {
         fchmod(fd1, S_IRUSR | S_IRGRP | S_IROTH);
+        free(request);
         break;
       }
     }

@@ -30,7 +30,6 @@ int initialize_shutdown(tlv_request_t *request, int thread_id) {
   }
   reply.value.header.ret_code = RC_OP_NALLOW;
   answer_user(request->value.header.pid, &reply, thread_id);
-  sleep(5);
   return -1;
 }
 
