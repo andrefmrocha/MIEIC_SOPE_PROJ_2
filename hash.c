@@ -15,16 +15,17 @@ void generate_hash(char *salt, char *password, char *hash) {
   strcat(buffer, salt);
   int fd1[2], fd2[2];
   pipe(fd1);
-  if(fork() == 0){
+  if (fork() == 0) {
     close(fd1[READ]);
     dup2(fd1[WRITE], STDOUT_FILENO);
     execlp("echo", "echo", "-n", buffer, NULL);
     printf("Failed to execute echo!\n");
     exit(1);
-  }else{
+  }
+  else {
     close(fd1[WRITE]);
     pipe(fd2);
-    if(fork() == 0){
+    if (fork() == 0) {
       close(fd2[READ]);
       dup2(fd2[WRITE], STDOUT_FILENO);
       dup2(fd1[READ], STDIN_FILENO);

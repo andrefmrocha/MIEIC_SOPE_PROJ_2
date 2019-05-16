@@ -50,4 +50,3 @@ int read_request(tlv_request_t *request, int fd1) {
     return -1;
   return 0;
 }
-

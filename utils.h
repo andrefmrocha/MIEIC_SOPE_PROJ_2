@@ -23,5 +23,3 @@ void conclude_read();
 void sigalarm_handler_server(int signo);
 
 void sigalarm_handler_user(int signo);
-
-

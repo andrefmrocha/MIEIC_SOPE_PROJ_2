@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
   open_server_log();
   int fd1;
   atexit(close_server_files);
-  if (mkfifo(SERVER_FIFO_PATH, 0660) < 0){
+  if (mkfifo(SERVER_FIFO_PATH, 0660) < 0) {
     fd1 = open(SERVER_FIFO_PATH, O_RDONLY);
     fchmod(fd1, S_IRWXU | S_IRWXG | S_IRWXO);
   }
@@ -36,7 +36,6 @@ int main(int argc, char *argv[]) {
     }
     tlv_request_t *request = malloc(sizeof(tlv_request_t));
     if (read_request(request, fd1) == -1) {
-      printf("EOF, continuining...\n");
       free(request);
       close(fd1);
       next_request();
@@ -54,7 +53,6 @@ int main(int argc, char *argv[]) {
     close(fd1);
     next_request();
   }
-
 
   pthread_exit(0);
 }

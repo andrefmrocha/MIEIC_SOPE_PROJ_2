@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
   write(fd_server, &request.length, sizeof(request.length));
   write(fd_server, &request.value, sizeof(request.value));
   close(fd_server);
-  fill_reply(&request, &reply); 
+  fill_reply(&request, &reply);
   change_alarm_signal(sigalarm_handler_user, &reply);
   int fd_answer = open(answer_fifo, O_RDONLY);
   if (fd_answer == -1) {

@@ -83,14 +83,13 @@ void create_account(tlv_request_t *value, int thread_id) {
     code = RC_OP_NALLOW;
   }
   else {
-    if(account_mutexes[value->value.create.account_id] != NULL) {
+    if (account_mutexes[value->value.create.account_id] != NULL) {
       code = RC_ID_IN_USE;
     }
     else {
       save_account(&value->value.create, thread_id);
       code = RC_OK;
     }
-
   }
   tlv_reply_t reply;
   reply.type = value->type;
@@ -108,7 +107,7 @@ void answer_user(pid_t user_pid, tlv_reply_t *reply, int thread_id) {
   strcat(answer_fifo, pid);
   logReply(get_server_fd(), thread_id, reply);
   logReply(STDOUT_FILENO, thread_id, reply);
-  tlv_reply_t fail_reply = * reply;
+  tlv_reply_t fail_reply = *reply;
   fail_reply.value.header.ret_code = RC_USR_DOWN;
   int fd = open(answer_fifo, O_WRONLY);
   if (fd < 0) {
@@ -139,7 +138,9 @@ void save_account(req_create_account_t *account_info, int thread_id) {
   generate_salt(salt);
   generate_hash(salt, account_info->password, hash);
   accounts[account_info->account_id] = malloc(sizeof(bank_account_t));
-  accounts[account_info->account_id]->account_id = account_info->account_id;
+  memset(accounts[account_info->account_id], 0, sizeof(bank_account_t));
+  accounts[account_info->account_id]
+    ->account_id = account_info->account_id;
   accounts[account_info->account_id]->balance = account_info->balance;
   strcpy(accounts[account_info->account_id]->hash, hash);
   strcpy(accounts[account_info->account_id]->salt, salt);
@@ -222,14 +223,18 @@ void transfer(tlv_request_t *value, int thread_id) {
     answer_user(value->value.header.pid, &reply, thread_id);
     return;
   }
+  if (value->value.header.account_id == value->value.transfer.account_id) {
+    reply.value.header.ret_code = RC_SAME_ID;
+    answer_user(value->value.header.pid, &reply, thread_id);
+    return;
+  }
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
+  logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.transfer.account_id);
   pthread_mutex_lock(account_mutexes[value->value.transfer.account_id]);
   pthread_mutex_lock(account_mutexes[value->value.header.account_id]);
-  if (value->value.header.account_id == value->value.transfer.account_id) {
-    code = RC_SAME_ID;
-  }
-  else if (((int) (accounts[value->value.header.account_id]->balance - value->value.transfer.amount)) < 0) {
+  if (((int) (accounts[value->value.header.account_id]->balance - value->value.transfer.amount)) < 0) {
     code = RC_NO_FUNDS;
   }
   else if (accounts[value->value.transfer.account_id]->balance + value->value.transfer.amount > MAX_BALANCE) {

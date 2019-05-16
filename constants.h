@@ -53,8 +53,7 @@
 // Server CLI Constants
 #define NUM_THRS 3
 
-#define READ    0
-#define WRITE   1
+#define READ 0
+#define WRITE 1
 
 #define MAX_DATA 200
-

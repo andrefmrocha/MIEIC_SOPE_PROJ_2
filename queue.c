@@ -1,17 +1,15 @@
 #include "queue.h"
 
-
-tlv_request_t * requests[MAX_DATA] = {NULL};
+tlv_request_t *requests[MAX_DATA] = {NULL};
 int front = 0;
 int rear = -1;
 int itemCount = 0;
 
-tlv_request_t * peek() {
+tlv_request_t *peek() {
   return requests[front];
 }
 
 bool isEmpty() {
-    printf("itemCount %d\n", itemCount);
   return itemCount == 0;
 }
 
@@ -23,7 +21,7 @@ int size() {
   return itemCount;
 }
 
-void insert(tlv_request_t * data) {
+void insert(tlv_request_t *data) {
 
   if (!isFull()) {
 
@@ -36,8 +34,8 @@ void insert(tlv_request_t * data) {
   }
 }
 
-tlv_request_t * removeData() {
-  tlv_request_t * data = requests[front++];
+tlv_request_t *removeData() {
+  tlv_request_t *data = requests[front++];
   if (front == MAX_DATA) {
     front = 0;
   }
