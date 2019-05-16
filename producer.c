@@ -5,13 +5,11 @@ void produce_data(tlv_request_t *request) {
   int sem_value;
   sem_getvalue(&empty, &sem_value);
   logSyncMechSem(get_server_fd(), MAIN_THREAD_ID, SYNC_OP_SEM_WAIT, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
-  logSyncMechSem(STDOUT_FILENO, MAIN_THREAD_ID, SYNC_OP_SEM_WAIT, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
   sem_wait(&empty);
   push_data(request, MAIN_THREAD_ID);
   sem_post(&full);
   sem_getvalue(&empty, &sem_value);
   logSyncMechSem(get_server_fd(), MAIN_THREAD_ID, SYNC_OP_SEM_POST, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
-  logSyncMechSem(STDOUT_FILENO, MAIN_THREAD_ID, SYNC_OP_SEM_POST, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
 }
 
 int initialize_shutdown(tlv_request_t *request, int thread_id) {

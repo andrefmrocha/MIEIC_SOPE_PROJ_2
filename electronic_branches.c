@@ -17,12 +17,12 @@ int login_user(req_header_t *account, int thread_id);
 void *consumer(void *args) {
   int id = *(int *) args;
   tlv_request_t *value;
+  logBankOfficeOpen(get_server_fd(), id, pthread_self());
   int sem_value;
   if (args != NULL) {
     while (1) {
       sem_getvalue(&full, &sem_value);
       logSyncMechSem(get_server_fd(), id, SYNC_OP_SEM_WAIT, SYNC_ROLE_CONSUMER, 0, sem_value);
-      logSyncMechSem(STDOUT_FILENO, id, SYNC_OP_SEM_WAIT, SYNC_ROLE_CONSUMER, 0, sem_value);
       sem_wait(&full);
       value = retrieve_data(id);
       if (value == NULL)
@@ -30,16 +30,14 @@ void *consumer(void *args) {
       sem_post(&empty);
       sem_getvalue(&empty, &sem_value);
       logSyncMechSem(get_server_fd(), id, SYNC_OP_SEM_POST, SYNC_ROLE_CONSUMER, value->value.header.pid, sem_value);
-      logSyncMechSem(STDOUT_FILENO, id, SYNC_OP_SEM_POST, SYNC_ROLE_CONSUMER, value->value.header.pid, sem_value);
       logRequest(get_server_fd(), MAIN_THREAD_ID, value);
-      logRequest(STDOUT_FILENO, MAIN_THREAD_ID, value);
       process_data(value, id);
     }
   }
   sem_post(&empty);
   sem_getvalue(&empty, &sem_value);
   logSyncMechSem(get_server_fd(), id, SYNC_OP_SEM_POST, SYNC_ROLE_CONSUMER, 0, sem_value);
-  logSyncMechSem(STDOUT_FILENO, id, SYNC_OP_SEM_POST, SYNC_ROLE_CONSUMER, 0, sem_value);
+  logBankOfficeClose(get_server_fd(), id, pthread_self());
   pthread_exit(0);
 }
 
