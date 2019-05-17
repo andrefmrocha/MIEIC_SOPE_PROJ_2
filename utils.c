@@ -34,12 +34,15 @@ void fill_reply(tlv_request_t *request, tlv_reply_t *reply) {
   reply->value.header.account_id = request->value.header.account_id;
   if (reply->type == OP_BALANCE) {
     reply->length = sizeof(rep_header_t) + sizeof(rep_balance_t);
+    reply->value.balance.balance = 0;
   }
   else if (reply->type == OP_TRANSFER) {
     reply->length = sizeof(rep_header_t) + sizeof(rep_transfer_t);
+    reply->value.transfer.balance = 0;
   }
   else if (reply->type == OP_SHUTDOWN) {
     reply->length = sizeof(rep_header_t) + sizeof(rep_shutdown_t);
+    reply->value.shutdown.active_offices = 0;
   }
   else {
     reply->length = sizeof(rep_header_t);
