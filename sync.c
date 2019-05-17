@@ -81,7 +81,6 @@ int stop_sync(tlv_request_t *request, int thread_id) {
 void next_request() {
   int value;
   sem_getvalue(sem, &value);
-  printf("Value: %d\n", value);
   if(value == 0)
     sem_post(sem);
 }
