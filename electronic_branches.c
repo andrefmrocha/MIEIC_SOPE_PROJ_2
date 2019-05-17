@@ -12,8 +12,6 @@ void check_balance(tlv_request_t *value, int thread_id);
 
 void transfer(tlv_request_t *value, int thread_id);
 
-int login_user(req_header_t *account, int thread_id);
-
 void *consumer(void *args) {
   int id = *(int *) args;
   tlv_request_t *value;

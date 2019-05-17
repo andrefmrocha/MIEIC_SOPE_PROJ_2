@@ -18,7 +18,7 @@ int initialize_shutdown(tlv_request_t *request, int thread_id) {
   reply.value.header.account_id = ADMIN_ACCOUNT_ID;
   reply.length = sizeof(rep_header_t) + sizeof(rep_shutdown_t);
 
-  if (request->value.header.account_id == ADMIN_ACCOUNT_ID) {
+  if (request->value.header.account_id == ADMIN_ACCOUNT_ID && login_user(&request->value.header, MAIN_THREAD_ID) == RC_OK) {
     logDelay(get_server_fd(), MAIN_THREAD_ID, request->value.header.op_delay_ms);
     logDelay(STDOUT_FILENO, MAIN_THREAD_ID, request->value.header.op_delay_ms);
     usleep(request->value.header.op_delay_ms);

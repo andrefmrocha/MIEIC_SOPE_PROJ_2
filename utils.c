@@ -9,14 +9,6 @@ void sigalarm_handler_user(int signo) {
   }
 }
 
-void sigalarm_handler_server(int signo) {
-  if (signo == SIGALRM) {
-    logReply(fd_log, MAIN_THREAD_ID, received_reply);
-    logReply(STDOUT_FILENO, MAIN_THREAD_ID, received_reply);
-    exit(1);
-  }
-}
-
 void sigaction_execute(void (*func)(int)) {
   struct sigaction action;
   action.sa_flags = 0;
