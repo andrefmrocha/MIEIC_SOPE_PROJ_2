@@ -70,6 +70,7 @@ void process_data(tlv_request_t *value, int thread_id) {
     reply.value.header.ret_code = code;
     answer_user(value->value.header.pid, &reply, thread_id);
   }
+  decrease_counter(thread_id);
   free(value);
 }
 

@@ -43,3 +43,9 @@ int stop_sync(tlv_request_t *request, int thread_id);
  * 
  */
 void next_request();
+
+/**
+ * @brief Decrease active offices counter
+ * 
+ */
+void decrease_counter(int thread_id);

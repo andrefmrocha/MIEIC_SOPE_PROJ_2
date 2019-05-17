@@ -33,7 +33,6 @@ int main(int argc, char *argv[]) {
   atexit(unlink_answer_fifo);
   int value;
   sem_getvalue(sem, &value);
-  printf("Sem: %d\n", value);
   sem_wait(sem);
   tlv_reply_t reply;
   fill_reply(&request, &reply);

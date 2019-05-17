@@ -2,7 +2,9 @@
 #include "queue.h"
 
 static pthread_mutex_t data_mut = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t counter_mut = PTHREAD_MUTEX_INITIALIZER;
 static int num_threads;
+static int active_count = 0;
 static int *offices_id;
 static pthread_t* tid;
 static sem_t *sem;
@@ -48,6 +50,13 @@ tlv_request_t *retrieve_data(int thread_id) {
     logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, 0);
     logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, 0);
   }
+  logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
+  pthread_mutex_lock(&counter_mut);
+  active_count++;
+  pthread_mutex_unlock(&counter_mut);
+  logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, 0);
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, 0);
 
   return saving_data;
 }
@@ -61,8 +70,7 @@ void push_data(tlv_request_t *pushing_data, int thread_id) {
 }
 
 int stop_sync(tlv_request_t *request, int thread_id) {
-  int full_num, sem_value;
-  sem_getvalue(&full, &full_num);
+  int sem_value;
   for (int i = 0; i < num_threads; i++) {
     sem_getvalue(&full, &sem_value);
     logSyncMechSem(get_server_fd(), thread_id, SYNC_OP_SEM_POST, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
@@ -75,7 +83,7 @@ int stop_sync(tlv_request_t *request, int thread_id) {
   free(offices_id);
   free(tid);
   sem_close(sem);
-  return full_num;
+  return active_count - num_threads;
 }
 
 void next_request() {
@@ -83,4 +91,15 @@ void next_request() {
   sem_getvalue(sem, &value);
   if(value == 0)
     sem_post(sem);
+}
+
+
+void decrease_counter(int thread_id){
+  logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
+  pthread_mutex_lock(&counter_mut);
+  active_count--;
+  pthread_mutex_unlock(&counter_mut);
+  logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, 0);
+  logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, 0);
 }
