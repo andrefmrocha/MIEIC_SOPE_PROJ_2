@@ -6,7 +6,7 @@ static pthread_mutex_t counter_mut = PTHREAD_MUTEX_INITIALIZER;
 static int num_threads;
 static int active_count = 0;
 static int *offices_id;
-static pthread_t* tid;
+static pthread_t *tid;
 static sem_t *sem;
 sem_t empty,
   full;
@@ -76,7 +76,7 @@ int stop_sync(tlv_request_t *request, int thread_id) {
     logSyncMechSem(get_server_fd(), thread_id, SYNC_OP_SEM_POST, SYNC_ROLE_PRODUCER, request->value.header.pid, sem_value);
     sem_post(&full);
   }
-  for(int i = 0; i < num_threads; i++){
+  for (int i = 0; i < num_threads; i++) {
     pthread_join(tid[i], NULL);
   }
   free_data();
@@ -89,12 +89,11 @@ int stop_sync(tlv_request_t *request, int thread_id) {
 void next_request() {
   int value;
   sem_getvalue(sem, &value);
-  if(value == 0)
+  if (value == 0)
     sem_post(sem);
 }
 
-
-void decrease_counter(int thread_id){
+void decrease_counter(int thread_id) {
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, 0);
   pthread_mutex_lock(&counter_mut);

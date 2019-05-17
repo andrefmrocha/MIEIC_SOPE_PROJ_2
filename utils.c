@@ -55,10 +55,10 @@ void close_server_files() {
   unlink(SERVER_SEMAPHORE);
 }
 
-void save_answer_fifo(char *answer){
+void save_answer_fifo(char *answer) {
   answer_name = answer;
 }
 
-void unlink_answer_fifo(){
+void unlink_answer_fifo() {
   unlink(answer_name);
 }

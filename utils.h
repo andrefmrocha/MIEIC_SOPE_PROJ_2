@@ -10,7 +10,6 @@
 #include "sope.h"
 #include "types.h"
 
-
 /**
  * @brief Fill a reply with the information regarding the current request
  * 

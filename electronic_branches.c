@@ -254,9 +254,9 @@ void transfer(tlv_request_t *value, int thread_id) {
   answer_user(value->value.header.pid, &reply, thread_id);
 }
 
-void free_data(){
-  for(int i = 0; i < MAX_BANK_ACCOUNTS; i++){
-    if(accounts[i] != NULL){
+void free_data() {
+  for (int i = 0; i < MAX_BANK_ACCOUNTS; i++) {
+    if (accounts[i] != NULL) {
       free(accounts[i]);
       free(account_mutexes[i]);
     }
