@@ -1,6 +1,7 @@
 #include "utils.h"
 static tlv_reply_t *received_reply;
 static int fd_log;
+static char *answer_name;
 void sigalarm_handler_user(int signo) {
   if (signo == SIGALRM) {
     logReply(fd_log, getpid(), received_reply);
@@ -52,4 +53,12 @@ void fill_reply(tlv_request_t *request, tlv_reply_t *reply) {
 void close_server_files() {
   unlink(SERVER_FIFO_PATH);
   unlink(SERVER_SEMAPHORE);
+}
+
+void save_answer_fifo(char *answer){
+  answer_name = answer;
+}
+
+void unlink_answer_fifo(){
+  unlink(answer_name);
 }

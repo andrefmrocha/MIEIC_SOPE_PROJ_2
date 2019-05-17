@@ -45,3 +45,7 @@ void conclude_read();
  * @param signo the signal number
  */
 void sigalarm_handler_user(int signo);
+
+
+void save_answer_fifo(char *answer);
+void unlink_answer_fifo();

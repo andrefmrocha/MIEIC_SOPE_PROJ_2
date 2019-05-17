@@ -29,6 +29,8 @@ int main(int argc, char *argv[]) {
   strcpy(answer_fifo, USER_FIFO_PATH_PREFIX);
   strcat(answer_fifo, pid);
   mkfifo(answer_fifo, 0660);
+  save_answer_fifo(answer_fifo);
+  atexit(unlink_answer_fifo);
   int value;
   sem_getvalue(sem, &value);
   printf("Sem: %d\n", value);
