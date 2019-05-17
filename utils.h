@@ -46,6 +46,15 @@ void conclude_read();
  */
 void sigalarm_handler_user(int signo);
 
-
+/**
+ * @brief Save the name of the answer fifo
+ * 
+ * @param answer the name of fifo
+ */
 void save_answer_fifo(char *answer);
+
+/**
+ * @brief Unlinking of the user's answer fifo
+ * 
+ */
 void unlink_answer_fifo();
