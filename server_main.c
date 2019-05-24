@@ -19,15 +19,14 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  server_cli(argv);
   open_server_log();
+  server_cli(argv);
   int fd1;
   atexit(close_server_files);
   if (mkfifo(SERVER_FIFO_PATH, 0660) < 0) {
     fd1 = open(SERVER_FIFO_PATH, O_RDONLY);
     fchmod(fd1, S_IRWXU | S_IRWXG | S_IRWXO);
   }
-  next_request();
   while (1) {
     fd1 = open(SERVER_FIFO_PATH, O_RDONLY);
     if (fd1 < 0) {
@@ -39,7 +38,6 @@ int main(int argc, char *argv[]) {
     if (read_request(request, fd1) == -1) {
       free(request);
       close(fd1);
-      next_request();
       continue;
     }
     logRequest(get_server_fd(), MAIN_THREAD_ID, request);
@@ -53,7 +51,6 @@ int main(int argc, char *argv[]) {
     }
     produce_data(request);
     close(fd1);
-    next_request();
   }
 
   pthread_exit(0);

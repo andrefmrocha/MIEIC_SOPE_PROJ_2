@@ -10,6 +10,7 @@
 #include "sope.h"
 #include "types.h"
 #include "utils.h"
+//TODO: Send a whole request
 
 int main(int argc, char *argv[]) {
   if (argc != 6) {
@@ -18,11 +19,6 @@ int main(int argc, char *argv[]) {
   open_user_log();
   tlv_request_t request;
   user_cli(&request, argv);
-  sem_t *sem = sem_open(SERVER_SEMAPHORE, 0, 0600);
-  if (sem == SEM_FAILED) {
-    printf("Failed to open server semaphore!\n");
-    exit(1);
-  }
   char answer_fifo[USER_FIFO_PATH_LEN];
   char pid[WIDTH_ID + 1];
   sprintf(pid, "%u", getpid());
@@ -31,9 +27,6 @@ int main(int argc, char *argv[]) {
   mkfifo(answer_fifo, 0660);
   save_answer_fifo(answer_fifo);
   atexit(unlink_answer_fifo);
-  int value;
-  sem_getvalue(sem, &value);
-  sem_wait(sem);
   tlv_reply_t reply;
   fill_reply(&request, &reply);
   reply.value.header.ret_code = RC_SRV_TIMEOUT;
@@ -46,9 +39,7 @@ int main(int argc, char *argv[]) {
   }
   logRequest(get_user_fd(), getpid(), &request);
   logRequest(STDOUT_FILENO, getpid(), &request);
-  write(fd_server, &request.type, sizeof(op_type_t));
-  write(fd_server, &request.length, sizeof(request.length));
-  write(fd_server, &request.value, sizeof(request.value));
+  write(fd_server, &request.type, sizeof(op_type_t) + sizeof(request.length) + request.length);
   close(fd_server);
   fill_reply(&request, &reply);
   change_alarm_signal(sigalarm_handler_user, &reply);

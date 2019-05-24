@@ -1,12 +1,22 @@
 #include "cli.h"
 
 int parse_string(char *string, char *parsed_string[]);
-
 void user_cli(tlv_request_t *request, char *argv[]) {
-  enum op_type operation_type = atoi(argv[4]);
+
+  enum op_type operation_type = strtol(argv[4], NULL, 10);
+  if (operation_type < 0 || operation_type >= 4) {
+    printf("Wrong operation type!\n");
+    exit(1);
+  }
   request->type = operation_type;
-  request->value.header.account_id = atoi(argv[ACCOUNT_ID]);
-  request->value.header.op_delay_ms = atoi(argv[OP_DELAY]);
+
+  request->value.header.account_id = strtol(argv[ACCOUNT_ID], NULL, 10);
+
+  if (request->value.header.account_id > MAX_BANK_ACCOUNTS) {
+    printf("Wrong account id!\n");
+    exit(1);
+  }
+  request->value.header.op_delay_ms = strtol(argv[OP_DELAY], NULL, 10);
   strcpy(request->value.header.password, argv[PASSWORD]);
   if (operation_type == OP_CREATE_ACCOUNT) {
     char *parsed_info[MAX_ARGUMENTS];
@@ -24,8 +34,8 @@ void user_cli(tlv_request_t *request, char *argv[]) {
       printf("Balance argument too big, exiting...\n");
       exit(1);
     }
-    request->value.create.account_id = atoi(parsed_info[CRT_ACCOUNT_ID]);
-    request->value.create.balance = atoi(parsed_info[CRT_ACCOUNT_BL]);
+    request->value.create.account_id = strtol(parsed_info[CRT_ACCOUNT_ID], NULL, 10);
+    request->value.create.balance = strtol(parsed_info[CRT_ACCOUNT_BL], NULL, 10);
     strcpy(request->value.create.password, parsed_info[CRT_ACCOUNT_PW]);
 
     if (request->value.create.account_id < 1 || request->value.create.account_id >= MAX_BANK_ACCOUNTS) {
@@ -66,8 +76,8 @@ void user_cli(tlv_request_t *request, char *argv[]) {
       exit(1);
     }
 
-    request->value.transfer.account_id = atoi(parsed_info[TRNF_ACC_ID]);
-    request->value.transfer.amount = atoi(parsed_info[TRNF_ACC_AMNT]);
+    request->value.transfer.account_id = strtol(parsed_info[TRNF_ACC_ID], NULL, 10);
+    request->value.transfer.amount = strtol(parsed_info[TRNF_ACC_AMNT], NULL, 10);
 
     if (request->value.transfer.account_id < 1 || request->value.transfer.account_id >= MAX_BANK_ACCOUNTS) {
       printf("Invalid account ID\n");
@@ -100,7 +110,12 @@ int parse_string(char *string, char *parsed_string[]) {
 }
 
 void server_cli(char *argv[]) {
-  initialize_sync(MIN(atoi(argv[1]), MAX_BANK_OFFICES));
+  unsigned bank_offices = strtol(argv[1], NULL, 10);
+  if(bank_offices > MAX_BANK_OFFICES){
+    printf("Invalid number of Bank Offices!\n");
+    exit(1);
+  }
+  initialize_sync(bank_offices);
   req_create_account_t admin_account;
   admin_account.account_id = ADMIN_ACCOUNT_ID;
   admin_account.balance = 0;

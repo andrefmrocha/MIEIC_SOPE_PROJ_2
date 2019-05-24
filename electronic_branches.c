@@ -229,8 +229,14 @@ void transfer(tlv_request_t *value, int thread_id) {
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, value->value.transfer.account_id);
-  pthread_mutex_lock(account_mutexes[value->value.transfer.account_id]);
-  pthread_mutex_lock(account_mutexes[value->value.header.account_id]);
+  if (account_mutexes[value->value.transfer.account_id] > account_mutexes[value->value.header.account_id]){
+    pthread_mutex_lock(account_mutexes[value->value.transfer.account_id]);
+    pthread_mutex_lock(account_mutexes[value->value.header.account_id]);
+  }else{
+    pthread_mutex_lock(account_mutexes[value->value.header.account_id]);
+    pthread_mutex_lock(account_mutexes[value->value.transfer.account_id]);
+  }
+  
   if (((int) (accounts[value->value.header.account_id]->balance - value->value.transfer.amount)) < 0) {
     code = RC_NO_FUNDS;
   }
@@ -244,8 +250,14 @@ void transfer(tlv_request_t *value, int thread_id) {
     code = RC_OK;
     reply.value.transfer.balance = accounts[value->value.header.account_id]->balance;
   }
-  pthread_mutex_unlock(account_mutexes[value->value.transfer.account_id]);
-  pthread_mutex_unlock(account_mutexes[value->value.header.account_id]);
+  if (account_mutexes[value->value.transfer.account_id] > account_mutexes[value->value.header.account_id]) {
+    pthread_mutex_unlock(account_mutexes[value->value.transfer.account_id]);
+    pthread_mutex_unlock(account_mutexes[value->value.header.account_id]);
+  }
+  else {
+    pthread_mutex_unlock(account_mutexes[value->value.header.account_id]);
+    pthread_mutex_unlock(account_mutexes[value->value.transfer.account_id]);
+  }
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, value->value.header.account_id);
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_UNLOCK, SYNC_ROLE_ACCOUNT, value->value.transfer.account_id);

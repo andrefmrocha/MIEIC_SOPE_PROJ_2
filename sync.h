@@ -38,11 +38,6 @@ void push_data(tlv_request_t *data, int thread_id);
  */
 int stop_sync(tlv_request_t *request, int thread_id);
 
-/**
- * @brief Ready the request semaphore to receive a new request
- * 
- */
-void next_request();
 
 /**
  * @brief Decrease active offices counter
