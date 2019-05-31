@@ -13,14 +13,6 @@
  */
 void produce_data(tlv_request_t *request);
 
-/**
- * @brief Initialize server shutdown, by preparing all threads to be stopped
- * 
- * @param request the request for said shutdown operation
- * @param thread_id the current thread id
- * @return int 0, if operation was sucessfully authorized
- */
-int initialize_shutdown(tlv_request_t *request, int thread_id);
 
 /**
  * @brief Read the information of a request

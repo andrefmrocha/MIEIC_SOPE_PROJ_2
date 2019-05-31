@@ -56,6 +56,7 @@ void process_data(tlv_request_t *value, int thread_id) {
         break;
 
       case OP_SHUTDOWN:
+        initialize_shutdown(value, thread_id);
         break;
 
       default:
@@ -273,4 +274,25 @@ void free_data() {
       free(account_mutexes[i]);
     }
   }
+}
+
+int initialize_shutdown(tlv_request_t *request, int thread_id) {
+  tlv_reply_t reply;
+  reply.type = OP_SHUTDOWN;
+  reply.value.header.account_id = ADMIN_ACCOUNT_ID;
+  reply.length = sizeof(rep_header_t) + sizeof(rep_shutdown_t);
+
+  if (request->value.header.account_id == ADMIN_ACCOUNT_ID) {
+    logDelay(get_server_fd(), thread_id, request->value.header.op_delay_ms);
+    logDelay(STDOUT_FILENO, thread_id, request->value.header.op_delay_ms);
+    usleep(request->value.header.op_delay_ms);
+    int active_threads = stop_sync(request, thread_id);
+    reply.value.header.ret_code = RC_OK;
+    reply.value.shutdown.active_offices = active_threads;
+    answer_user(request->value.header.pid, &reply, thread_id);
+    return 0;
+  }
+  reply.value.header.ret_code = RC_OP_NALLOW;
+  answer_user(request->value.header.pid, &reply, thread_id);
+  return -1;
 }
