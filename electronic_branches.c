@@ -130,7 +130,7 @@ void save_account(req_create_account_t *account_info, int thread_id) {
   logSyncMech(get_server_fd(), thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, account_info->account_id);
   logSyncMech(STDOUT_FILENO, thread_id, SYNC_OP_MUTEX_LOCK, SYNC_ROLE_ACCOUNT, account_info->account_id);
   pthread_mutex_lock(account_mutexes[account_info->account_id]);
-  char salt[SALT_LEN];
+  char salt[SALT_LEN+1];
   char hash[HASH_LEN + 1];
   generate_salt(salt);
   generate_hash(salt, account_info->password, hash);
@@ -236,6 +236,7 @@ void transfer(tlv_request_t *value, int thread_id) {
     pthread_mutex_lock(account_mutexes[value->value.header.account_id]);
     pthread_mutex_lock(account_mutexes[value->value.transfer.account_id]);
   }
+  usleep(account->op_delay_ms);
   
   if (((int) (accounts[value->value.header.account_id]->balance - value->value.transfer.amount)) < 0) {
     code = RC_NO_FUNDS;

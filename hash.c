@@ -3,10 +3,10 @@
 void generate_salt(char *salt) {
   time_t t;
   srand((unsigned) time(&t));
-  for (size_t n = 0; n < SALT_LEN - 2; n++) {
+  for (size_t n = 0; n < SALT_LEN - 1; n++) {
     sprintf(salt + n, "%x", rand() % 0xff);
   }
-  salt[SALT_LEN - 1] = '\0';
+  salt[SALT_LEN] = '\0';
 }
 
 void generate_hash(char *salt, char *password, char *hash) {
